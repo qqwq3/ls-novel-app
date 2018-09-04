@@ -98,34 +98,38 @@ class Dialog extends PureComponent<Props>{
                         <View style={styles.popBody}>
                             { this.props.children }
                         </View>
-                        <View style={styles.popFooter}>
-                            {
-                                buttons === 2 ?
-                                <View style={styles.innerButtons}>
-                                    <TouchableOpacity
-                                        style={[styles.popBtn, {borderRightColor: '#dcdcdc', borderRightWidth: moderateScale(1 / pixel)}]}
-                                        activeOpacity={0.5}
-                                        onPress={() => onDismiss ? onDismiss() : {}}
-                                    >
-                                        <Text style={[styles.popBtnText, Colors.gray_c0c0c0]}>{ buttonLeftText }</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        style={styles.popBtn}
-                                        activeOpacity={0.5}
-                                        onPress={() => onConfirm ? onConfirm() : {}}
-                                    >
-                                        <Text style={[styles.popBtnText, Colors.orange_f3916b]}>{ buttonRightText }</Text>
-                                    </TouchableOpacity>
-                                </View> :
-                                <TouchableOpacity
-                                    style={styles.popBtn}
-                                    activeOpacity={0.5}
-                                    onPress={() => onConfirm ? onConfirm() : {}}
-                                >
-                                    <Text style={[styles.popBtnText, Colors.orange_f3916b]}>{ buttonRightText }</Text>
-                                </TouchableOpacity>
-                            }
-                        </View>
+                        {
+                            buttons !== 0 ?
+                                <View style={styles.popFooter}>
+                                    {
+                                        buttons === 2 ?
+                                            <View style={styles.innerButtons}>
+                                                <TouchableOpacity
+                                                    style={[styles.popBtn, {borderRightColor: '#dcdcdc', borderRightWidth: moderateScale(1 / pixel)}]}
+                                                    activeOpacity={0.5}
+                                                    onPress={() => onDismiss ? onDismiss() : {}}
+                                                >
+                                                    <Text style={[styles.popBtnText, Colors.gray_c0c0c0]}>{ buttonLeftText }</Text>
+                                                </TouchableOpacity>
+                                                <TouchableOpacity
+                                                    style={styles.popBtn}
+                                                    activeOpacity={0.5}
+                                                    onPress={() => onConfirm ? onConfirm() : {}}
+                                                >
+                                                    <Text style={[styles.popBtnText, Colors.orange_f3916b]}>{ buttonRightText }</Text>
+                                                </TouchableOpacity>
+                                            </View> :
+                                            <TouchableOpacity
+                                                style={styles.popBtn}
+                                                activeOpacity={0.5}
+                                                onPress={() => onConfirm ? onConfirm() : {}}
+                                            >
+                                                <Text style={[styles.popBtnText, Colors.orange_f3916b]}>{ buttonRightText }</Text>
+                                            </TouchableOpacity>
+                                    }
+                                </View> : null
+
+                        }
                     </View>
                 </TouchableOpacity>
             </Modal>

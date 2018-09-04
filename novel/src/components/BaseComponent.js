@@ -1,7 +1,7 @@
 'use strict';
 
 import React, { Component } from 'react';
-import { NavigationActions } from 'react-navigation';
+import { StackActions, NavigationActions } from 'react-navigation';
 import { infoToast } from "../common/Tool";
 import { removeUserSession } from "../common/Storage";
 
@@ -34,7 +34,7 @@ export default class BaseComponent extends Component {
         }
 
         if (showError && this.ignoreErrorCodes().indexOf(nextData.error.code) == -1) {
-            if (nextData.error.code === 401) {
+            if (parseInt(nextData.error.code) === 401) {
                 if(this.isRedirect401()) {
                     return this.logIn();
                 }
@@ -45,11 +45,13 @@ export default class BaseComponent extends Component {
                 // 清除redux相关的缓存
                 global.persistStore && global.persistStore.purge();
 
-                return infoToast(nextData.error.message);
+                let errorPrompt = this.props.authorizedKey ? nextData.error.message : '请先登录';
+
+                return infoToast && infoToast(errorPrompt);
             }
 
             // 显示错误
-            infoToast(nextData.error.message);
+            infoToast && infoToast(nextData.error.message);
         }
 
     }
@@ -72,23 +74,64 @@ export default class BaseComponent extends Component {
     logIn = () => {
         this.props.navigation && this.props.navigation.navigate('logIn');
     };
-    backNavigate = (routeName: string, params: Object = undefined) => {
-        this.props.navigation && this.props.navigation.dispatch({
-            type: 'BACK',
-            params: {
-                forwardTo: {
-                    routeName: routeName,
-                    params: params,
-                },
-            }
+    newNavigate = (routeName: string, params: Object = {}, subRouteName?: string, subParams?: Object = {}) => {
+        const navigateAction = NavigationActions.navigate({
+            routeName: routeName,
+            params: params,
+            action: NavigationActions.navigate({
+                routeName: subRouteName,
+                params: subParams
+            }),
         });
+
+        this.props.navigation && this.props.navigation.dispatch(navigateAction);
     };
-    resetNavigate = (routeName: string, params: Object = undefined) => {
-        this.props.navigation && this.props.navigation.dispatch(NavigationActions.reset({
+    backNavigate = (key: string) => {
+        const backAction = NavigationActions.back({key});
+
+        this.props.navigation && this.props.navigation.dispatch(backAction);
+    };
+    setParamsNavigate = (params: Object = {}, key: string) => {
+        const setParamsAction = NavigationActions.setParams({
+            params,
+            key
+        });
+
+        this.props.navigation && this.props.navigation.dispatch(setParamsAction);
+    };
+    replaceNavigate = (routeName: string, params: Object = {}) => {
+        const replaceAction = StackActions.replace({
+            routeName, params
+        });
+
+        this.props.navigation && this.props.navigation.dispatch(replaceAction);
+    };
+    resetNavigate = (routeName: string, params: Object = {}) => {
+        const resetAction = StackActions.reset({
             index: 0,
-            actions: [
-                NavigationActions.navigate({ routeName, params, }),
-            ],
-        }));
+            actions: [NavigationActions.navigate({ routeName, params })],
+        });
+
+        this.props.navigation && this.props.navigation.dispatch(resetAction);
+    };
+    pushNavigate = (routeName: string, params: Object = {}) => {
+        const pushAction = StackActions.push({
+            routeName,
+            params
+        });
+
+        this.props.navigation && this.props.navigation.dispatch(pushAction);
+    };
+    popNavigate = (value: number = 1) => {
+        const popAction = StackActions.pop({
+            n: value,
+        });
+
+        this.props.navigation && this.props.navigation.dispatch(popAction);
+    };
+    popToTopNavigate = () => {
+        const popToTopAction = StackActions.popToTop();
+
+        this.props.navigation && this.props.navigation.dispatch(popToTopAction);
     };
 }

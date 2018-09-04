@@ -151,6 +151,9 @@ const Colors = ScaledSheet.create({
     gray_c0c0c0: {
         color: '#c0c0c0',
     },
+    gray_993333:{
+        color:'#993333',
+    },
     orange_f3916b: {
         color: '#f3916b',
     },

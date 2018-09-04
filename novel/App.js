@@ -2,22 +2,23 @@
 'use strict';
 
 import React, { Component } from 'react';
-import { ActivityIndicator, Text, View, Platform } from 'react-native';
+import { ActivityIndicator, Text, View, Platform, StatusBar, Image } from 'react-native';
 import SplashScreen from 'react-native-smart-splash-screen';
-// import { withNetworkConnectivity } from 'react-native-offline';
 import * as Progress from 'react-native-progress';
+import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 import CodePush from "react-native-code-push";
 import AppMetadata from 'react-native-app-metadata'
 import { Provider } from 'react-redux';
-import { consoleDestroy, setStatusBar, setAppBrightness, codePushDialogConfig } from "./src/common/Tool";
-import { ScaledSheet, BackgroundColor } from './src/common/Style';
+import {consoleDestroy, setStatusBar, setAppBrightness, codePushDialogConfig, width, height} from "./src/common/Tool";
+import {ScaledSheet, BackgroundColor, Img, Fonts, Colors} from './src/common/Style';
 import Router from './src/Route/Index';
 import configureStore from './src/store/Index';
 import { VERSION, DEPLOYMENT_KEYS } from "./src/common/Keys";
 import * as api from './src/common/Api';
 import BinaryUpgrader from './src/common/BinaryUpgrader';
 import { commonLoad, removeUserSession } from "./src/common/Storage";
-import StatusBarSet from './src/components/StatusBarSet';
+// import StatusBarSet from './src/components/StatusBarSet';
+import {mix} from "./src/common/Icons";
 
 type Props = {};
 
@@ -38,7 +39,7 @@ class App extends Component<Props> {
         consoleDestroy && consoleDestroy();
 
         // 状态栏设置
-        setStatusBar && setStatusBar('#FFFFFF',true);
+        setStatusBar && setStatusBar('#FFFFFF',false);
 
         // 设置日间或者夜间模式
         // this.modeAutoChange();
@@ -98,7 +99,7 @@ class App extends Component<Props> {
             };
 
             this.checkBinaryVersion();
-            // this.checkJSBundleVersion();
+            //this.checkJSBundleVersion();
         }
         else {
             let errorMes = result.message;
@@ -134,9 +135,9 @@ class App extends Component<Props> {
         // 取到代码热跟新的key -  暂且为staging包
         let deploymentKey = DEPLOYMENT_KEYS[Platform.OS].STAGING;
 
-        CodePush.sync(codePushDialogConfig(deploymentKey), this.codePushStatusDidChange, this.codePushDownloadDidProgress);
+        // CodePush.sync(codePushDialogConfig(deploymentKey), this.codePushStatusDidChange, this.codePushDownloadDidProgress);
 
-        // this.launch();
+        this.launch();
     }
     binaryPushStatusDidChange(status) {
         switch (status) {
@@ -208,6 +209,11 @@ class App extends Component<Props> {
     async launch() {
         this.setState({isLoading: false});
     }
+    renderLunchImage(){
+        return (
+            <Image source={mix.lunchImage} style={[styles.lunchImage, Img.resizeModeStretch]}/>
+        );
+    }
     render() {
         const {store, isLoading, downloadProgress, tipText} = this.state;
 
@@ -223,18 +229,24 @@ class App extends Component<Props> {
             );
 
             return (
-                <View style={styles.background}>
-                    <StatusBarSet/>
-                    <ActivityIndicator color={BackgroundColor.bg_f3916b} style={styles.loading} />
-                    { this.state.tipText ? <Text style={styles.tip}>{ tipText }</Text> : null }
+                <View style={[styles.background]}>
+                    {/*<StatusBarSet/>*/}
+                    {/*<ActivityIndicator color={BackgroundColor.bg_f3916b} style={[styles.loading]} />*/}
+                    { this.state.tipText ? <Text style={[styles.tip, Fonts.fontFamily, Fonts.fontSize14, Colors.gray_4c4c4c]}>{ tipText }</Text> : null }
                     { this.state.downloadProgress > 0 ? downloadProgressBar : null }
+                    { this.renderLunchImage() }
                 </View>
             );
         }
 
         return (
             <Provider store={store}>
-                <Router/>
+                <Router
+                    screenProps={{
+                        statusBarHeight: StatusBar.currentHeight,
+                        store: store
+                    }}
+                />
             </Provider>
         );
     }
@@ -249,17 +261,30 @@ App = CodePush(codePushOptions)(App);
 export default App;
 
 const styles = ScaledSheet.create({
+    lunchImage: {
+        width: width,
+        height: height - verticalScale(60),
+        position: 'absolute',
+        zIndex: 10,
+        left: 0,
+        top: 0,
+        bottom: 0,
+        right: 0
+    },
     background: {
-        backgroundColor: '#fff',
+        backgroundColor: '#FFFFFF',
         flex: 1,
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        position: 'relative',
+        overflow: 'hidden',
+        zIndex: 10
     },
     ActivityIndicatorView:{
-        width:80,
-        height:80,
+        width: 80,
+        height: 80,
         backgroundColor:'rgba(0,0,0,0.6)',
-        borderRadius:6,
+        borderRadius: 6,
         justifyContent:"center",
         alignItems:'center'
     },
@@ -305,16 +330,16 @@ const styles = ScaledSheet.create({
     },
     loading: {
         position: 'absolute',
-        bottom: 100,
+        bottom: verticalScale(70),
+        zIndex: 100,
     },
     tip: {
-        color: 'rgb(64,64,64)',
-        fontSize: 14,
         position:'absolute',
-        bottom: 40
+        bottom: verticalScale(30),
+        zIndex: 100,
     },
     progressBar: {
         position: 'absolute',
-        bottom: 30,
+        bottom: verticalScale(30),
     },
 });

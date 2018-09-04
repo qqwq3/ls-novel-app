@@ -8,7 +8,7 @@ import {
     TextInput, Keyboard, ScrollView,
     Alert, ActivityIndicator,
     Platform, StatusBar, InteractionManager,
-    FlatList, PanResponder
+    FlatList, PanResponder, BackHandler, AppState
 } from 'react-native';
 import { connect } from 'react-redux';
 import Immutable from 'immutable';
@@ -30,8 +30,9 @@ import DrawerJsx from '../../components/DrawerJsx';
 import BaseComponent from "../../components/BaseComponent";
 import SharePop from '../../components/SharePop';
 import Chrysanthemum from "../../components/Chrysanthemum";
-import { updateChapter, readerPosition, lightChapterTitle } from '../../actions/LocalAction';
+import { updateChapter, readerPosition, lightChapterTitle, getTimerState } from '../../actions/LocalAction';
 import StatusBarSet from '../../components/StatusBarSet';
+import Dialog from '../../components/Dialog';
 import { commonSave, commonLoad, fineCommonSave, fineCommonLoad } from "../../common/Storage";
 import {
     width, height, AnimatedTiming,
@@ -92,7 +93,8 @@ class Reader extends BaseComponent<Props, State>{
             fontSColor: '#604733',
             fontLineHeight: moderateScale(30),
             bookTitle: '',
-            readerPaperBg: ['#EBDBC1','#FFFFFF','#9bdbd3'],
+            // readerPaperBg: ['#EBDBC1','#FFFFFF','#9bdbd3'],
+            readerPaperBg: ['#EBDBC1','#FFFFFF','#222222'],
             readerThemeIndex: 1,
             plateTypeIndex: 0,
             readerModelValue: false,
@@ -186,8 +188,16 @@ class Reader extends BaseComponent<Props, State>{
         // 还原本地action
         this.props.updateChapter && this.props.updateChapter(false);
 
+        // 计时器
+        // this._timer();
+
+        // 监听app状态
+        AppState.addEventListener('change', this._handleAppStateChange.bind(this));
+
         // 软键盘监听
         // this._keyboardHide = Keyboard.addListener('keyboardDidHide',this._keyboardDidHideHandler.bind(this));
+
+        // console.log('reader-index', StatusBar.currentHeight);
     }
     componentWillReceiveProps(nextProps) {
         super.componentWillReceiveProps(nextProps);
@@ -215,40 +225,99 @@ class Reader extends BaseComponent<Props, State>{
             this._chapterDataProcessing(nextProps);
         }
     }
-    async componentWillUnmount() {
+    componentWillUnmount() {
+        const isLogin = this.isAuthorized();
+        const { navigation } = this.props;
+        const bookHexId = navigation.getParam('bookHexId');
+
         // this._keyboardHide && this._keyboardHide.remove();
         // setStatusBarHidden && setStatusBarHidden(false);
         // this.setState({statusBarControl: false});
 
-        setStatusBar && setStatusBar(BackgroundColor.bg_fff, true, 'dark-content');
+        setStatusBar && setStatusBar(BackgroundColor.bg_fff, false, 'dark-content');
 
-        const { navigation } = this.props;
-        const bookHexId = navigation.getParam('bookHexId');
+        if(isLogin || !isLogin && this.state.content.length !== 0 && this.state.chapterContentArr.length !== 0){
+            fineCommonSave && fineCommonSave(
+                'allBookCapter',
+                bookHexId + 'currentChapter',
+                {
+                    content: this.state.content,
+                    x: this.x,
+                    sourceSiteIndex: this.state.sourceSiteIndex,
+                    chaptersCount: this.state.chaptersCount,
+                    bookTitle: this.state.bookTitle,
+                    chapterChangeArr: this.chapterChangeArr,
+                    count: this.count,
+                    pages: this.pages,
+                    index: this.index,
+                    // contentOriginal: this.state.contentOriginal,
+                    chapterContentArr: this.state.chapterContentArr,
+                    chapterTitleArr: this.state.chapterTitleArr,
+                    chapterIndexArr: this.state.chapterIndexArr,
+                    chapterHexIdArr: this.state.chapterHexIdArr,
+                }
+            );
+        }
 
-        fineCommonSave && fineCommonSave(
-            'allBookCapter',
-            bookHexId + 'currentChapter',
-            {
-                content: this.state.content,
-                x: this.x,
-                sourceSiteIndex: this.state.sourceSiteIndex,
-                chaptersCount: this.state.chaptersCount,
-                bookTitle: this.state.bookTitle,
-                chapterChangeArr: this.chapterChangeArr,
-                count: this.count,
-                pages: this.pages,
-                index: this.index,
-                // contentOriginal: this.state.contentOriginal,
-                chapterContentArr: this.state.chapterContentArr,
-                chapterTitleArr: this.state.chapterTitleArr,
-                chapterIndexArr: this.state.chapterIndexArr,
-                chapterHexIdArr: this.state.chapterHexIdArr,
-            }
+        this.timer && clearTimeout(this.timer);
+        AppState.removeEventListener('change', this._handleAppStateChange.bind(this));
+    }
+    _handleAppStateChange = (nextAppState) => {
+        // 背面程序执行
+        if(nextAppState === 'background'){
+            this.props.getTimerState && this.props.getTimerState(false);
+        }
+
+        //this.setState({appState: nextAppState});
+    };
+    // 取消 - function
+    onDismissExit(){
+        this.popExitRef && this.popExitRef.modeHide();
+    }
+    //  分享- function
+    onConfirmExit(){
+        this.popExitRef && this.popExitRef.modeHide();
+        this.refs['drawer'] && this.refs['drawer'].openControlPanel();
+    }
+    // 分享提示 - demo
+    renderLogout(){
+        return (
+            <Dialog
+                popHeight={verticalScale(180)}
+                ref={ref => this.popExitRef = ref}
+                animationType={'slide'}
+                title={'系统提示'}
+                buttonLeftText={'取消'}
+                buttonRightText={'分享'}
+                mandatory={true}
+                onDismiss={this.onDismissExit.bind(this)}
+                onConfirm={this.onConfirmExit.bind(this)}
+                buttons={2}
+            >
+                <View style={[Styles.flexCenter, Styles.flex1]}>
+                    <Text style={[Fonts.fontSize15, Fonts.fontFamily, Colors.gray_404040]}>亲，喜欢就赶快分享给小伙伴吧！</Text>
+                </View>
+            </Dialog>
         );
+    }
+    // 倒计时 - function
+    _timer(){
+        if(!this.props.timerState){
+            this.props.getTimerState(false);
+        }
+
+        if(this.props.timerState){
+            return;
+        }
+
+        this.timer = setTimeout(()=>{
+            this.popExitRef && this.popExitRef.modeShow();
+            this.props.getTimerState(true);
+        },1000 * 60);
     }
     // 设置动画初始设置 - function
     animatedStartSet(){
-        this.animateds.header.top.setValue(verticalScale(-44));
+        this.animateds.header.top.setValue(verticalScale(-44 - StatusBar.currentHeight));
         this.animateds.footer.bottom.setValue(verticalScale(-65));
         this.animateds.footer.fontSetBottom.setValue(verticalScale(-254.23)); // 190.67
     }
@@ -488,7 +557,7 @@ class Reader extends BaseComponent<Props, State>{
         //if(direct){
             if(local){
                 this.setState({
-                    // bookTitle: local.bookTitle,
+                    bookTitle: local.bookTitle,
                     chaptersCount: local.chaptersCount,
                     // sourceSiteIndex: local.sourceSiteIndex,
                     // content: local.content,
@@ -575,7 +644,7 @@ class Reader extends BaseComponent<Props, State>{
     // 关闭设置 - 动画 - function
     setAnimateClose(){
         Animated.parallel([
-            AnimatedTiming(this.animateds.header.top, verticalScale(-44)),
+            AnimatedTiming(this.animateds.header.top, verticalScale(-44 - StatusBar.currentHeight)),
             AnimatedTiming(this.animateds.footer.bottom, verticalScale(-65))
         ]).start(() => {
             // this.setState({
@@ -756,7 +825,7 @@ class Reader extends BaseComponent<Props, State>{
                                     style={[styles.buckleBut,Styles.flexCenter, {marginTop: moderateScale(25)}]}
                                     onPress={this._freeBookMoney.bind(this)}
                                 >
-                                    <Text style={[Fonts.fontFamily, Fonts.fontSize16, Colors.orange_f3916b]}>免费领取书币</Text>
+                                    <Text style={[Fonts.fontFamily, Fonts.fontSize16, Colors.orange_f3916b]}>分享免费得终身VIP！</Text>
                                 </TouchableOpacity>
                                 {
                                     parseInt(result.value) === 100 &&
@@ -779,48 +848,25 @@ class Reader extends BaseComponent<Props, State>{
                             </View>
                         </View> :
                         <View>
-                            {/*<View style={[styles.buckleTitle, Styles.flexCenter]}>*/}
-                            {/*<Text*/}
-                            {/*style={[Fonts.fontFamily, Fonts.fontSize16, {color: this.state.fontSColor}]}*/}
-                            {/*>*/}
-                            {/*本章节需要登录后才能观看哦*/}
-                            {/*</Text>*/}
-                            {/*</View>*/}
-                            {/*<TouchableOpacity*/}
-                            {/*activeOpacity={0.75}*/}
-                            {/*style={[styles.buckleBut,Styles.flexCenter,{backgroundColor: BackgroundColor.bg_f3916b, marginTop: moderateScale(40)}]}*/}
-                            {/*onPress={this._loginPage.bind(this)}*/}
-                            {/*>*/}
-                            {/*<Text style={[Fonts.fontFamily, Fonts.fontSize16, Colors.white_FFF]}>立即登录</Text>*/}
-                            {/*</TouchableOpacity>*/}
-                            {/*<TouchableOpacity*/}
-                            {/*activeOpacity={0.75}*/}
-                            {/*style={[styles.buckleBut,Styles.flexCenter,{backgroundColor: BackgroundColor.bg_f3916b, marginTop: moderateScale(30)}]}*/}
-                            {/*onPress={this._goBack.bind(this)}*/}
-                            {/*>*/}
-                            {/*<Text style={[Fonts.fontFamily, Fonts.fontSize16, Colors.white_FFF]}>下次登录</Text>*/}
-                            {/*</TouchableOpacity>*/}
-                            {
-                                parseInt(result.value) === 13 &&
-                                <View>
-                                    <View style={[Styles.flexCenter]}>
-                                        <Text style={[Fonts.fontFamily, Fonts.fontSize16, Colors.gray_404040]}>本章节暂无数据内容</Text>
-                                    </View>
-                                    <TouchableOpacity
-                                        activeOpacity={0.75}
-                                        style={[styles.buckleBut,Styles.flexCenter,{backgroundColor: BackgroundColor.bg_f3916b, marginTop: moderateScale(40)}]}
-                                        onPress={this._immediatelyReaderNextChapter.bind(this)}
-                                    >
-                                        <Text style={[Fonts.fontFamily, Fonts.fontSize16, Colors.white_FFF]}>立即阅读下一章</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            }
+                            <View style={[styles.buckleTitle, Styles.flexCenter]}>
+                            <Text
+                            style={[Fonts.fontFamily, Fonts.fontSize16, {color: this.state.fontSColor}]}>
+                                本章节需要登录后才能观看哦
+                            </Text>
+                            </View>
                             <TouchableOpacity
                                 activeOpacity={0.75}
-                                style={[styles.buckleBut,Styles.flexCenter, {marginTop: moderateScale(25)}]}
-                                onPress={this._freeBookMoney.bind(this)}
+                                style={[styles.buckleBut,Styles.flexCenter,{backgroundColor: BackgroundColor.bg_f3916b, marginTop: moderateScale(40)}]}
+                                onPress={this._loginPage.bind(this)}
                             >
-                                <Text style={[Fonts.fontFamily, Fonts.fontSize16, Colors.orange_f3916b]}>免费领取书币</Text>
+                                <Text style={[Fonts.fontFamily, Fonts.fontSize16, Colors.white_FFF]}>立即登录</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                activeOpacity={0.75}
+                                style={[styles.buckleBut,Styles.flexCenter,{backgroundColor: BackgroundColor.bg_f3916b, marginTop: moderateScale(30)}]}
+                                onPress={this._goBack.bind(this)}
+                            >
+                                <Text style={[Fonts.fontFamily, Fonts.fontSize16, Colors.white_FFF]}>下次登录</Text>
                             </TouchableOpacity>
                         </View>
                 }
@@ -1016,27 +1062,28 @@ class Reader extends BaseComponent<Props, State>{
         const batteryLevelWidth: number = this.batteryLevel * moderateScale(17);
         const batteryLevelPercentage = accounting.toFixed(Number((this.batteryLevel * 100)), 0);
         const commonColor = batteryLevelPercentage <= moderateScale(10) ? 'red' : '#999999';
+        const precentCount = accounting.toFixed((Number(item.num) / Number(chaptersCount)) * 100, 2) || 0;
 
         // console.log('_contentText', item);
 
         return (
             <TouchableOpacity
                 activeOpacity={1}
-                style={[{height: height, width: width}]}
+                style={[{height: height, width: width, paddingTop: moderateScale(StatusBar.currentHeight)}]}
                 onPress={this.readerSetting.bind(this)}
             >
                 <View style={[{flex: 1, justifyContent: 'space-between'}]}>
                     <View style={[styles.readerRow, Styles.paddingHorizontal15]}>
                         <Text style={comFontStyles}>{ item.title || '' }</Text>
-                        <View style={[Styles.row]}>
-                            <Text style={comFontStyles}>{ this.readerCurrentTiem }</Text>
-                            <View style={[styles.batteryLevelBox, {marginTop: moderateScale(4.25)}]}>
-                                <View style={[styles.batteryLevelInner, {borderColor: commonColor}]}>
-                                    <View style={[styles.batteryLevel, {width: batteryLevelWidth, backgroundColor: commonColor}]}/>
-                                </View>
-                                <View style={[styles.batterHeader, {backgroundColor: commonColor, marginTop: moderateScale(-2)}]}/>
-                            </View>
-                        </View>
+                        {/*<View style={[Styles.row]}>*/}
+                            {/*<Text style={comFontStyles}>{ this.readerCurrentTiem }</Text>*/}
+                            {/*<View style={[styles.batteryLevelBox, {marginTop: moderateScale(4.25)}]}>*/}
+                                {/*<View style={[styles.batteryLevelInner, {borderColor: commonColor}]}>*/}
+                                    {/*<View style={[styles.batteryLevel, {width: batteryLevelWidth, backgroundColor: commonColor}]}/>*/}
+                                {/*</View>*/}
+                                {/*<View style={[styles.batterHeader, {backgroundColor: commonColor, marginTop: moderateScale(-2)}]}/>*/}
+                            {/*</View>*/}
+                        {/*</View>*/}
                     </View>
                     <View style={{flex: 1,alignSelf:'center'}}>
                         {
@@ -1055,7 +1102,7 @@ class Reader extends BaseComponent<Props, State>{
                     </View>
                     <View style={[styles.readerRow, Styles.paddingHorizontal15]}>
                         <Text style={comFontStyles}>{ item.index } / { item.length }</Text>
-                        <Text style={comFontStyles}>{ item.num } / { chaptersCount }</Text>
+                        <Text style={comFontStyles}>{ precentCount }%</Text>
                     </View>
                 </View>
             </TouchableOpacity>
@@ -1063,19 +1110,19 @@ class Reader extends BaseComponent<Props, State>{
     }
     // 阅读渲染 - demo
     renderReaderRow({item, index}){
-        if(this.index === 0 && this.state.forward && (this.state.deviationCount / width) === 0){
-            return (
-                <GestureRecognizer
-                    key={index}
-                    style={[Styles.row, {zIndex: 10}]}
-                    onSwipeRight={(state) => this.onSwipeRight(state)}
-                    responderRelease={(evt, gestureState) => this.responderReleaseSlide(evt, gestureState)}
-                    config={this.gestureConfig}
-                >
-                    { this._contentText(item) }
-                </GestureRecognizer>
-            );
-        }
+        // if(this.index === 0 && this.state.forward && (this.state.deviationCount / width) === 0){
+        //     return (
+        //         <GestureRecognizer
+        //             key={index}
+        //             style={[Styles.row, {zIndex: 10}]}
+        //             onSwipeRight={(state) => this.onSwipeRight(state)}
+        //             responderRelease={(evt, gestureState) => this.responderReleaseSlide(evt, gestureState)}
+        //             config={this.gestureConfig}
+        //         >
+        //             { this._contentText(item) }
+        //         </GestureRecognizer>
+        //     );
+        // }
 
         return (
             <View key={index} style={[Styles.row, {zIndex: 10}]}>
@@ -1182,7 +1229,7 @@ class Reader extends BaseComponent<Props, State>{
                         resizeMode={'contain'}
                     />
                 </TouchableOpacity>
-                <View style={[Styles.flexCenter, Styles.flex1]}>
+                <View style={[Styles.flexCenter, Styles.flex1, {paddingTop: verticalScale(StatusBar.currentHeight)}]}>
                     <Text style={[Fonts.fontFamily, Fonts.fontSize16, Colors.white_FFF]}>《{ this.state.bookTitle }》</Text>
                 </View>
                 <TouchableOpacity
@@ -1274,13 +1321,17 @@ class Reader extends BaseComponent<Props, State>{
     // 打开目录 - function
     catalogPanelOpen(){
         const { navigation } = this.props;
-        const { book } = this.props.article;
-        const hexId = book ? book.hexId : '';
-        const bookId = book ? book.id : '';
-        const title = book ? book.title : '';
+        const hexId = navigation.getParam('bookHexId');
+        const bookId = navigation.getParam('bookId');
+        const title = this.state.bookTitle;
+
+        // const { book } = this.props.article;
+        // const hexId = book ? book.hexId : '';
+        // const bookId = book ? book.id : '';
+        // const title = book ? book.title : '';
 
         // 点亮当前章节标题
-        this.props.lightChapterTitle && this.props.lightChapterTitle(this.state.content, this.x);
+        this.props.lightChapterTitle && this.props.lightChapterTitle(hexId, this.state.content, this.x);
 
         // 关闭动画
         if(this.state.controlStatus) this.setAnimateClose();
@@ -1603,24 +1654,32 @@ class Reader extends BaseComponent<Props, State>{
     // 分享朋友 - function
     _shareFriends(){
         const shareUrl = global.launchSettings && global.launchSettings.agentData && global.launchSettings.agentData.data &&
-            global.launchSettings.agentData.data.shareUrl || 'http://share.lameixisi.cn/share/index.html';
+            global.launchSettings.agentData.data.shareUrl || 'http://share.lameixisi.cn';
         const agentTag = (global.launchSettings && global.launchSettings.agentTag) || '10';
         const channelID = global.launchSettings && global.launchSettings.channelID;
 
-        shareRemoveListener && shareRemoveListener();
+        // shareRemoveListener && shareRemoveListener();
         commonShare && commonShare('friends', channelID, shareUrl, agentTag, this.state.bookTitle);
-        shareAddListener && shareAddListener();
+        // shareAddListener && shareAddListener(_ => {
+        //     this.props.localShare && this.props.localShare();
+        //     Toast.show(this.props.message,{duration: 2000, position: -55})
+        // });
     }
     // 分享朋友圈 - function
     _shareFriendsCircle(){
         const shareUrl = global.launchSettings && global.launchSettings.agentData && global.launchSettings.agentData.data &&
-            global.launchSettings.agentData.data.shareUrl || 'http://share.lameixisi.cn/share/index.html';
+            global.launchSettings.agentData.data.shareUrl || 'http://share.lameixisi.cn';
         const agentTag = (global.launchSettings && global.launchSettings.agentTag) || '10';
         const channelID = global.launchSettings && global.launchSettings.channelID;
 
-        shareRemoveListener && shareRemoveListener();
+        // shareRemoveListener && shareRemoveListener();
+
         commonShare && commonShare('friendsCircle', channelID, shareUrl, agentTag, this.state.bookTitle);
-        shareAddListener && shareAddListener();
+
+        // shareAddListener && shareAddListener(_ => {
+        //     this.props.localShare && this.props.localShare();
+        //     Toast.show(this.props.message,{duration: 2000, position: -55})
+        // });
     }
     // 状态栏设置 - demo
     renderStatusBar(){
@@ -1679,7 +1738,7 @@ class Reader extends BaseComponent<Props, State>{
                 }
             >
                 <View style={[Styles.container, readerThemeIndex !== 0 ? { backgroundColor } : {}]}>
-                    { this.renderStatusBar() }
+                    {/*{ this.renderStatusBar() }*/}
                     { this.renderHeader() }
                     { this.renderReaderContent() }
                     { this.renderFooterNav() }
@@ -1687,6 +1746,7 @@ class Reader extends BaseComponent<Props, State>{
                     {/*{ this.renderFooterComments() }*/}
                     { this.renderEmptyLayer() }
                     { this.renderReaderBg() }
+                    { this.renderLogout() }
                 </View>
             </DrawerJsx>
         );
@@ -1797,9 +1857,11 @@ const styles = ScaledSheet.create({
         flexDirection:'row',
     },
     readerHeaderRmb: {
-        height: '44@vs',
+        // height: '44@vs',
         // height: '58@vs',
         // paddingTop: '14@vs',
+        height: verticalScale(44 + StatusBar.currentHeight),
+        paddingTop: verticalScale(StatusBar.currentHeight),
         position: 'absolute',
         top: 0,
         right: 0,
@@ -1904,7 +1966,7 @@ const styles = ScaledSheet.create({
         // paddingRight: '55@ms',
         paddingRight: '40@ms',
         flexDirection: 'row',
-        height: '60@vs',
+        height: '50@vs',
     },
     readerFooterSetBox: {
         flexDirection: 'column',
@@ -1925,16 +1987,19 @@ const styles = ScaledSheet.create({
     readerHeaderSetBar: {
         position: 'absolute',
         width: width,
-        height: '44@vs',
+        height: verticalScale(44 + StatusBar.currentHeight),
+        // height: '44@vs',
         // height: '58@vs',
         // paddingTop: '14@vs',
         left: 0,
         zIndex: 100,
     },
     readerHeaderReturn: {
-        height: '44@vs',
+        // height: '44@vs',
         // height: '58@vs',
         // paddingTop: '14@vs',
+        height: verticalScale(44 + StatusBar.currentHeight),
+        paddingTop: verticalScale(StatusBar.currentHeight),
         width: width / 3,
         position: 'absolute',
         left: 0,
@@ -2000,6 +2065,7 @@ const mapStateToProps = (state, ownProps) => {
     let myData = state.getIn(['user', 'userData','myData']);
     let userData = state.getIn(['user','userData','baseInfo']);
     let readerObj = state.getIn(['local','reader']);
+    let readerTimer = state.getIn(['local','readerTimer']);
 
     if(Immutable.Map.isMap(localData)){ localData = localData.toJS() }
     if(Immutable.Map.isMap(data)){ data = data.toJS() }
@@ -2007,12 +2073,18 @@ const mapStateToProps = (state, ownProps) => {
     if(Immutable.Map.isMap(myData)){ myData = myData.toJS() }
     if(Immutable.Map.isMap(userData)){ userData = userData.toJS() }
     if(Immutable.Map.isMap(readerObj)){ readerObj = readerObj.toJS() }
+    if(Immutable.Map.isMap(readerTimer)){ readerTimer = readerTimer.toJS() }
 
-    return { ...ownProps, ...data, ...localData, ...myData, ...userData, ...readerObj };
+    return {
+        ...ownProps, ...data,
+        ...localData, ...myData,
+        ...userData, ...readerObj ,
+        ...readerTimer
+    };
 };
 
 export default withNavigationFocus(connect(mapStateToProps,{
     getChapter, addComments,
     updateChapter, readerPosition,
-    lightChapterTitle
+    lightChapterTitle, getTimerState
 })(Reader));

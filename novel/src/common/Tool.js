@@ -254,14 +254,14 @@ export class statusBarSet{
 
 // 设置状态栏 - a
 export const setStatusBar = (
-    backgroundColor: string,
-    animated: boolean,
+    backgroundColor: string = '#FFFFFF',
+    animated: boolean = false,
     androidContent: string = 'dark-content',
     iosContent: string = 'light-content'
 ) => {
     if(Platform.OS === 'android'){
         StatusBar.setBackgroundColor(backgroundColor, animated);
-        StatusBar.setBarStyle(androidContent, animated);
+        // StatusBar.setBarStyle(androidContent, animated);
     }
 
     if(Platform.OS === 'ios'){
@@ -416,7 +416,7 @@ export const contentFormat = (
     content: Array<any> = [],
     fontSize: number,
     lineHeight: number,
-    surplusHeight: number = moderateScale(80),
+    surplusHeight: number = moderateScale(80 + StatusBar.currentHeight),
     surplusWidth: number = moderateScale(30),
 ): Array<any> => {
     const _contentArr = [];

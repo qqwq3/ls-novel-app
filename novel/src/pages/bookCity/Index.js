@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import { View, Text, Image,  TouchableOpacity, FlatList } from 'react-native';
 import Immutable from 'immutable';
 import { connect } from 'react-redux';
-import {moderateScale, scale} from 'react-native-size-matters';
+import {moderateScale, scale, verticalScale} from 'react-native-size-matters';
 import Carousel from 'react-native-banner-carousel';
 import { Styles, ScaledSheet, Img, Fonts, Colors, BackgroundColor } from "../../common/Style";
 import TabBarIcon from '../../components/TabBarIcon';
@@ -38,10 +38,25 @@ class BookCity extends Component<Props>{
         };
         this.bannerArr = [
             {
-                cover: require('../../images/banner/banner3.png'),
-                title: 'banner3'
+                cover: require('../../images/banner/banner9.png'),
+                title: 'banner9'
             },
-
+            {
+                cover: require('../../images/banner/banner4.jpg'),
+                title: 'banner4'
+            },
+            {
+                cover: require('../../images/banner/banner5.jpg'),
+                title: 'banner5'
+            },
+            {
+                cover: require('../../images/banner/banner6.jpg'),
+                title: 'banner6'
+            },
+            {
+                cover: require('../../images/banner/banner7.jpg'),
+                title: 'banner7'
+            }
         ];
     }
     componentDidMount() {
@@ -119,7 +134,7 @@ class BookCity extends Component<Props>{
             </TouchableOpacity>
         )
     }
-    // 申请代理 - router
+    // banner - router
     _ApplyAgent(index){
         const { navigation } = this.props;
 
@@ -127,14 +142,26 @@ class BookCity extends Component<Props>{
         //     navigation && navigation.navigate('ApplyAgent');
         // }
 
-        if(index === 1){
+        if(index === 0){
             navigation && navigation.navigate('ShareBookCurrency');
+        }
+        if(index === 1){
+            navigation && navigation.navigate('Details',{ hexId: "0bf99a8439929c80", bookId: 95962});
+        }
+        if(index === 2){
+            navigation && navigation.navigate('Details',{ hexId: "f1e771667ec3d18f", bookId: 70594});
+        }
+        if(index === 3){
+            navigation && navigation.navigate('Details',{ hexId: "77f5cf965271f09d", bookId: 31328});
+        }
+        if(index === 4){
+            navigation && navigation.navigate('Details',{ hexId: "9ee49bd823456344", bookId: 39942});
         }
     }
      _bookWholeRow(item: Object, x: number, callback?: Function, key?: number | string){
          const img = loadImage(item.bookIds);
-         const description =item.books[0] ? item.books[0].description : false;
-         const Description = /<br\s*\/?>/gi.test(description) ? description.replace(/<br\s*\/?>/gi,"\r\n") : description;
+         //const description =item.books[0] ? item.books[0].description : false;
+         //const Description = /<br\s*\/?>/gi.test(description) ? description.replace(/<br\s*\/?>/gi,"\r\n") : description;
 
          return (
              <TouchableOpacity
@@ -158,18 +185,77 @@ class BookCity extends Component<Props>{
                          >
                              { item.books[x].authorName }
                          </Text>
-                         <Text
-                             numberOfLines={1}
-                             style={[styles.bookSectionAuthor, Fonts.fontFamily, Fonts.fontSize12, Colors.gray_808080]}
-                         >
-                             { numberConversion(item.books[x].totalWords || 0) }
-                         </Text>
+                         <View style={{flex: 1,
+                             justifyContent: 'flex-end',
+                             flexDirection: 'row',
+                             overflow: 'hidden'}}>
+                             {item.books[x].status ===1 ?
+                             <Text
+                                 numberOfLines={1}
+                                 style={[
+                                     styles.bookSectionAuthor,
+                                     Fonts.fontFamily,
+                                     {
+                                         fontSize:scale(9),
+                                         color:'#9F79EE',
+                                         borderColor:'#9F79EE',
+                                         borderWidth: moderateScale(0.6),
+                                         borderRadius:moderateScale(4),
+                                         padding:moderateScale(2),
+                                         marginRight:moderateScale(5)
+                                     }
+                                 ]}
+                             >
+                                 {'连载'}
+                             </Text>:<Text
+                                     numberOfLines={1}
+                                     style={[styles.bookSectionAuthor, Fonts.fontFamily, {fontSize:scale(9),color:'#89EDB1',borderColor:'#89EDB1',borderWidth: moderateScale(0.5),borderRadius:moderateScale(4),padding:moderateScale(2),marginRight:moderateScale(5)}]}
+                                 >
+                                     {'完结'}
+                                 </Text>}
+
+                             <Text
+                                 numberOfLines={1}
+                                 style={[
+                                     styles.bookSectionAuthor,
+                                     Fonts.fontFamily,
+                                     {
+                                         fontSize:scale(9),
+                                         color:'#F4A460',
+                                         borderColor:'#F4A460',
+                                         borderWidth: moderateScale(0.6),
+                                         borderRadius:moderateScale(4),
+                                         padding:moderateScale(2),
+                                         marginRight:moderateScale(5)
+                                     }
+                                 ]}
+                             >
+                                 { item.books[x].categoryName }
+                             </Text>
+                             <Text
+                                 numberOfLines={1}
+                                 style={[
+                                     styles.bookSectionAuthor,
+                                     Fonts.fontFamily,
+                                     {
+                                         fontSize:scale(9),
+                                         color:'#CAE1FF',
+                                         borderColor:'#CAE1FF',
+                                         borderWidth: moderateScale(0.6),
+                                         borderRadius:moderateScale(4),
+                                         padding:moderateScale(2)
+                                     }
+                                 ]}
+                             >
+                                 { numberConversion(item.books[x].totalWords || 0) }
+                             </Text>
+                         </View>
                      </View>
                      <Text
                          numberOfLines={3}
                          style={[styles.bookSectionText, Fonts.fontFamily, Fonts.fontSize12, Colors.gray_808080]}
                      >
-                         { item.books[x].description ? Description : '本书暂无描述' }
+                         { item.books[x].description ? item.books[x].description.replace(/<br\s*\/?>/gi,"\r\n") : '本书暂无描述' }
                      </Text>
                  </View>
              </TouchableOpacity>
@@ -224,6 +310,7 @@ class BookCity extends Component<Props>{
     // 数据渲染 - demo
     renderItem({item, index}){
         return (
+            item.books.length !== 0 &&
             <View style={[styles.box, index === 0 && {marginTop: 0}]}>
                 <View style={[styles.boxHeader]}>
                     <View style={[styles.boxBoldDot,{backgroundColor: BackgroundColor.bg_f3916b}]}/>
@@ -286,7 +373,6 @@ class BookCity extends Component<Props>{
 const styles = ScaledSheet.create({
     authorView: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
     },
     bannerImage: {
         width: '100%',
@@ -365,7 +451,7 @@ const styles = ScaledSheet.create({
         marginBottom: '5@ms',
     },
     bookSectionAuthor: {
-        marginBottom: '5@ms'
+        marginBottom: '5@ms',
     },
     bookSectionText: {
         lineHeight: '18@ms'

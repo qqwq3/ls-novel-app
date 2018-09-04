@@ -1,7 +1,11 @@
 'use strict';
 
 import React,{ Component } from 'react';
-import { View, Text, FlatList, Image, TouchableOpacity, TouchableHighlight, TextInput, Dimensions, StatusBar } from 'react-native';
+import {
+    View, Text, FlatList, Image,
+    TouchableOpacity, TouchableHighlight,
+    TextInput, Dimensions, StatusBar
+} from 'react-native';
 import { connect } from 'react-redux';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 import Immutable from 'immutable';
@@ -86,15 +90,35 @@ class OpenVip extends BaseComponent<Props>{
     renderCard(){
         const ScreenWidth = Dimensions.get('window').width-scale(30);
         const data=this.state.avatar!='' ? true : false;
+
         return(
             <View style={{backgroundColor:'#272A30',position:'relative'}}>
-                <Image source={openVip.card} style={{width:ScreenWidth,height:verticalScale(168),marginLeft:moderateScale(15),borderTopRightRadius:moderateScale(10),borderTopLeftRadius:moderateScale(10)}}/>
+                <Image
+                    source={openVip.card}
+                    style={{
+                        width:ScreenWidth,
+                        height:verticalScale(168),
+                        marginLeft:moderateScale(15),
+                        borderTopRightRadius:moderateScale(10),
+                        borderTopLeftRadius:moderateScale(10)
+                    }}
+                />
 
                 <View style={[styles.readBook,{flexDirection:'row',alignItems:'center'}]}>
                     {
                         data ?
-                          <Image source={{uri:this.state.avatar}} style={[Img.resizeModeContain, styles.cardTxImage,{borderRadius:moderateScale(50),marginRight:moderateScale(10)}]}/> :
-                          <Image source={my.userDefault} style={[Img.resizeModeContain, styles.cardTxImage,{marginRight:moderateScale(10)}]}/>
+                          <Image
+                              source={{uri:this.state.avatar}}
+                              style={[
+                                  Img.resizeModeContain,
+                                  styles.cardTxImage,{
+                                  borderRadius:moderateScale(50),
+                                  marginRight:moderateScale(10)
+                              }]}
+                          /> :
+                          <Image
+                              source={my.userDefault}
+                              style={[Img.resizeModeContain, styles.cardTxImage,{marginRight:moderateScale(10)}]}/>
                     }
                     <Text style={[Fonts.fontFamily,Fonts.fontSize14,{color:'white'}]}>{this.state.name}</Text>
                 </View>
@@ -171,7 +195,8 @@ class OpenVip extends BaseComponent<Props>{
 const styles = ScaledSheet.create({
     arrow: {
         marginLeft:'15@ms',
-        marginTop:'30@ms',
+        // marginTop:'30@ms',
+        marginTop: verticalScale(30 + StatusBar.currentHeight)
     },
     VipSurplus: {
         position:'absolute',

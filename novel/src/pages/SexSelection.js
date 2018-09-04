@@ -2,16 +2,24 @@
 'use strict';
 
 import React from 'react';
-import { ActivityIndicator, View, Text, Image, TouchableHighlight, TouchableOpacity } from 'react-native';
+import {
+    ActivityIndicator, View, Text,
+    Image, TouchableHighlight,
+    TouchableOpacity, StatusBar
+} from 'react-native';
 import Immutable from 'immutable';
 import { connect } from 'react-redux';
-import { Styles, ScaledSheet, Fonts, Colors, Img, BackgroundColor } from "../common/Style";
-import { sex } from "../common/Icons";
+import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
+import {
+    Styles, ScaledSheet, Fonts,
+    Colors, Img, BackgroundColor
+} from "../common/Style";
+import {mix, sex} from "../common/Icons";
 import { submitSex } from '../actions/SexSelection';
 import { commonLoad } from "../common/Storage";
 import BaseComponent from "../components/BaseComponent";
-import { setStatusBar } from "../common/Tool";
-import StatusBarSet from '../components/StatusBarSet';
+import {setStatusBar, width, height} from "../common/Tool";
+// import StatusBarSet from '../components/StatusBarSet';
 
 type Props = {};
 
@@ -47,14 +55,14 @@ class SexSelection extends BaseComponent<Props, State>{
         }
 
         // 状态栏设置
-        setStatusBar && setStatusBar('#FFFFFF',true);
+        setStatusBar && setStatusBar('#FFFFFF', false);
     }
     componentWillReceiveProps(nextProps){
         super.componentWillReceiveProps(nextProps);
         // 成功提示
         if(nextProps && nextProps.timeUpdated > this.updateTime){
             this.updateTime = Date.now();
-            this.jump()
+            this.jump();
         }
     }
     // 调转 - function
@@ -73,27 +81,33 @@ class SexSelection extends BaseComponent<Props, State>{
     noSelect() {
         this.props.submitSex && this.props.submitSex(0);
     }
+    renderLunchImage(){
+        return (
+            <Image source={mix.lunchImage} style={[styles.lunchImage, Img.resizeModeStretch]}/>
+        );
+    }
     render(){
         const { serverRet } = this.state;
 
         if(!serverRet) {
             return (
-                <View style={styles.background}>
-                    <StatusBarSet/>
+                <View style={[styles.background]}>
+                    {/*<StatusBarSet/>*/}
                     <ActivityIndicator color={BackgroundColor.bg_f3916b} style={styles.loading} />
                     <Text style={styles.tip}>内容载入中...</Text>
+                    {/*{ this.renderLunchImage() }*/}
                 </View>
             )
         }
 
         return (
             <View style={[Styles.container]}>
-                <StatusBarSet/>
+                {/*<StatusBarSet/>*/}
 
                 <TouchableHighlight
                     onPress={this.noSelect.bind(this)}
                     activeOpacity={1.0}
-                    style={styles.jumpBox}
+                    style={[styles.jumpBox]}
                     underlayColor={'#FFFFFF'}
                 >
                     <Text style={[Fonts.fontFamily, Fonts.fontSize15, Colors.gray_404040]}>跳过</Text>
@@ -127,21 +141,34 @@ class SexSelection extends BaseComponent<Props, State>{
 }
 
 const styles = ScaledSheet.create({
+    lunchImage: {
+        width: width,
+        height: height,
+        position: 'absolute',
+        zIndex: 10,
+        left: 0,
+        top: 0,
+        bottom: 0,
+        right: 0
+    },
     background: {
-        backgroundColor: '#fff',
+        backgroundColor: '#FFFFFF',
         flex: 1,
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        position: 'relative',
+        overflow: "hidden",
     },
     tip: {
         color: 'rgb(64,64,64)',
         fontSize: 14,
         position:'absolute',
-        bottom: 40
+        bottom: verticalScale(30),
+        zIndex: 100
     },
     loading: {
         position: 'absolute',
-        bottom: 100,
+        bottom: verticalScale(70),
     },
     image: {
         width: '120@s',
@@ -161,7 +188,8 @@ const styles = ScaledSheet.create({
         alignItems: 'center',
         justifyContent: 'flex-end',
         paddingRight: '15@ms',
-        marginTop: '10@vs',
+        // marginTop: '10@vs',
+        marginTop: verticalScale(10 + StatusBar.currentHeight),
     },
     selectTitle: {
         marginVertical: '60@ms',

@@ -5,14 +5,10 @@ import android.util.Log;
 import com.facebook.react.ReactApplication;
 import com.example.qiepeipei.react_native_clear_cache.ClearCachePackage;
 import com.ninty.system.setting.SystemSettingPackage;
-
 import com.meituan.android.walle.WalleChannelReader;
-
 import com.microsoft.codepush.react.CodePush;
-
 import com.rnfs.RNFSPackage;
 import com.parryworld.rnappupdate.RNAppUpdatePackage;
-
 import im.shimo.react.cookie.CookieManagerPackage;
 import com.ocetnik.timer.BackgroundTimerPackage;
 import com.theweflex.react.WeChatPackage;
@@ -24,7 +20,6 @@ import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
 import com.facebook.react.shell.MainReactPackage;
 import com.facebook.soloader.SoLoader;
-
 import com.umeng.analytics.MobclickAgent;
 import com.umeng.analytics.MobclickAgent.EScenarioType;
 import com.novel.umeng.DplusReactPackage;
@@ -54,6 +49,7 @@ public class MainApplication extends Application implements ReactApplication {
           new MainReactPackage(),
             new ClearCachePackage(),
             new SystemSettingPackage(),
+            new ExampleReactNativePackage(),
 
             new CodePush(BuildConfig.CODEPUSH_KEY, MainApplication.this, BuildConfig.DEBUG),
             // new CodePush(getResources().getString(R.string.reactNativeCodePush_androidDeploymentKey), getApplicationContext(), BuildConfig.DEBUG),
@@ -87,10 +83,10 @@ public class MainApplication extends Application implements ReactApplication {
     super.onCreate();
     SoLoader.init(this, /* native exopackage */ false);
 
-    String channel = WalleChannelReader.getChannel(this.getApplicationContext());
-    channel = null == channel ? "10" : channel;
+    // String channel = WalleChannelReader.getChannel(this.getApplicationContext());
+    // channel = null == channel ? "10" : channel;
 
     // RN UMeng初始化
-    RNUMConfigure.init(this, "5a600a268f4a9d15470008d9", channel, UMConfigure.DEVICE_TYPE_PHONE, "");
+    // RNUMConfigure.init(this, "5a600a268f4a9d15470008d9", channel, UMConfigure.DEVICE_TYPE_PHONE, "");
   }
 }

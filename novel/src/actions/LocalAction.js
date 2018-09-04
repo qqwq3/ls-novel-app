@@ -57,25 +57,34 @@ export const readerPosition = (value: Number) => (dispatch: Dispatch, getState: 
     return dispatch(_readerPosition(value));
 };
 
-const _lightChapterTitle = (content, index): ThunkAction => ({
+const _lightChapterTitle = (bookHexId, content, index): ThunkAction => ({
     params: {
-        stateKeys: ['chapterTitle'],
+        stateKeys: ['chapterTitle', bookHexId],
         content: content,
         index: index,
+        bookHexId: bookHexId,
     },
     type: 'CHAPTER_NAME_LIGHT_LOCAL',
 });
 
 // 点亮章节标题
-export const lightChapterTitle = (content: Array<any>, index: number) => (dispatch: Dispatch, getState: GetState) => {
-    return dispatch(_lightChapterTitle(content, index));
+export const lightChapterTitle = (bookHexId: string, content: Array<any>, index: number) => (dispatch: Dispatch, getState: GetState) => {
+    return dispatch(_lightChapterTitle(bookHexId, content, index));
 };
 
 
+// 阅读分享计时器弹窗
+const _getTimerState = (state): ThunkAction => ({
+    params: {
+        stateKeys: ['readerTimer'],
+        state: state,
+    },
+    type: 'GET_READER_TIMER_STATE_LOCAL'
+});
 
-
-
-
+export const getTimerState = (state: boolean = false) => (dispatch: Dispatch, getState: GetState) => {
+    return dispatch(_getTimerState(state))
+};
 
 
 

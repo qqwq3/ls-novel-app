@@ -61,6 +61,13 @@ const local = (state = initialState, action: Action) => {
                         index: action.params.index,
                     }
                 });
+
+            // 阅读分享计时器弹窗
+            case 'GET_READER_TIMER_STATE_LOCAL':
+                return state.setIn(action.params.stateKeys, {
+                    timerState: action.params.state,
+                    timerUpdated: Date.now(),
+                });
         }
 
         // 请求失败统一处理

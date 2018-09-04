@@ -19,7 +19,7 @@ class StatusBarSet extends Component<Props, State>{
         translucent: true,
         backgroundColor: '#FFFFFF',
         barStyle: 'dark-content',
-        animated: true,
+        animated: false,
         hidden: false,
     };
     render(){

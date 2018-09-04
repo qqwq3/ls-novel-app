@@ -159,7 +159,8 @@ class Setting extends Component<Props>{
             <Rows
                 isClick={false}
                 showLeftTitle={true}
-                leftTitle={this.state.value ? '夜间模式' : '日间模式'}
+                // leftTitle={this.state.value ? '日间模式' : '夜间模式'}
+                leftTitle={'夜间模式'}
                 showBottomBorder={true}
                 isRightConfigure={false}
                 nonConfigRightComponents={

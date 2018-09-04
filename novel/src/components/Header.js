@@ -117,7 +117,12 @@ class Header extends PureComponent<Props>{
         );
     }
     renderStatusBar(){
-        return (<StatusBarSet/>);
+        return (
+            <StatusBarSet
+                translucent={false}
+                animated={false}
+            />
+        );
     }
     render(){
         const { borderBottomColor, isArrow, headerBackgroundColor, stylesHeaderPosition } = this.props;
@@ -142,15 +147,15 @@ const styles = ScaledSheet.create({
     titleRows: {
         width: '100%',
         left: 0,
-        // top: 0,
-        top: moderateScale(5),
+        //top: 0,
+        top: moderateScale(10),
         zIndex: 1,
         position: 'absolute',
     },
     titleRight: {
-        // height: '44@vs',
+        //height: '44@vs',
         height: verticalScale(44 + commonTop),
-        paddingTop: moderateScale(5),
+        paddingTop: moderateScale(10),
         position: 'absolute',
         top: 0,
         right: 0,
@@ -158,9 +163,9 @@ const styles = ScaledSheet.create({
         zIndex: 100
     },
     demo: {
-        // height: '44@vs',
+        //height: '44@vs',
         height: verticalScale(44 + commonTop),
-        paddingTop: moderateScale(5),
+        paddingTop: moderateScale(10),
     },
     demoRight: {
         flexDirection: 'row',
@@ -170,9 +175,9 @@ const styles = ScaledSheet.create({
         alignItems: 'center',
     },
     arrow: {
-        // height: '44@vs',
+        //height: '44@vs',
         height: verticalScale(44 + commonTop),
-        paddingTop: moderateScale(5),
+        paddingTop: moderateScale(10),
         width: '100@s',
         flexDirection: 'row',
         alignItems: 'center',
@@ -184,9 +189,9 @@ const styles = ScaledSheet.create({
         height: '18@ms',
     },
     headerContent: {
-        // height: '44@vs',
+        //height: '44@vs',
         height: verticalScale(44 + commonTop),
-        paddingTop: moderateScale(5),
+        paddingTop: moderateScale(10),
         position: 'relative',
         borderBottomWidth: moderateScale(1 / pixel),
         borderBottomColor: 'transparent',

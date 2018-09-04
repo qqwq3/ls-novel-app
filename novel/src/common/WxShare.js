@@ -3,33 +3,32 @@
 'use strict';
 
 import * as weChat from 'react-native-wechat';
-import Toast from 'react-native-root-toast';
+import { infoToast } from "./Tool";
 import { loadUserSession } from '../common/Storage';
 
 const  wxId = 'wxd79fff9d3b933e8b';
-
-//-------------------------- new  public --------------------------------//
+// const wxId = 'wx4f60c8eebaec00f1';
 
 export const commonShare = async (
     type: string,
     channelID:string,
     shareUrl:string,
     agentTag:string,
-    title?: string = '小说天堂-全网免费看',
-    contentText?: string = '免费看全网书籍，还能赚大钱。强烈推荐！',
+    title?: string = '畅乐读-全网免费看',
+    contentText?: string = '畅享阅读时光，遇见美好未来',
     link: string,
 ) => {
     const shareBody = contentText;
     const shareTitle = title;
-    const shareImageUrl: string = 'http://novel-res.oss-cn-hangzhou.aliyuncs.com/icon/180.png';
+    const shareImageUrl: string = 'http://novel-res.oss-cn-hangzhou.aliyuncs.com/icon/400.png';
     // const shareLink: string = shareUrl +`/agoutv/download.html?channelId=${channelID}`;
 
     const user = await loadUserSession();
     const userId = (user && user.id) || '';
-    //http://192.168.188.157:82/share/index.html
-    const shareLink: string = link ? link :`${shareUrl}/share/index.html?channelId=${channelID}&agentTag=${agentTag}&user_id=${userId}`;
+    // http://192.168.188.157:82/share/index.html
+    const shareLink: string = link ? link :`${shareUrl}/share/index.html?channelId=${channelID}&agentTag=${agentTag}&user_id=${userId}&shareAgentTag1=1044`;
 
-    shareContent(type,shareTitle,shareBody,shareImageUrl,shareLink);
+    shareContent && shareContent(type,shareTitle,shareBody,shareImageUrl,shareLink);
 };
 
 
@@ -65,15 +64,24 @@ export const shareContent = (
         if (isInstalled) {
             // 分享给朋友
             if(type === 'friends'){
-                weChat.shareToSession(obj).catch((error) => {  });
+                weChat.shareToSession(obj).then(res => {
+                    // console.log('5555555', res);
+                }).catch((error) => {
+                    infoToast && infoToast('分享失败，请稍后再次分享哦');
+                });
             }
+
             // 分享到朋友圈
             if(type === 'friendsCircle'){
-                weChat.shareToTimeline(obj).catch((error) => {  });
+                weChat.shareToTimeline(obj).then(res => {
+                    // console.log('5555555', res);
+                }).catch((error) => {
+                    infoToast && infoToast('分享失败，请稍后再次分享哦');
+                });
             }
         }
         else {
-            Toast.show('没有安装微信软件，请您安装微信之后再试',{duration: 2000, position: -55});
+            infoToast && infoToast('没有安装微信软件，请您安装微信之后再试');
         }
     });
 };
@@ -83,10 +91,15 @@ export const shareAddListener = (success: Function => void) => {
     weChat.addListener(
         'SendMessageToWX.Resp',
         (response) => {
+
+            console.log('shareAddListener', response);
+
             if (parseInt(response.errCode) === 0) {
                 success && success();
             }
-            else { Toast.show('分享失败，请稍后再次分享哦',{duration: 2000, position: -55}) }
+            else {
+                infoToast && infoToast('分享失败，请稍后再次分享哦');
+            }
         }
     );
 };

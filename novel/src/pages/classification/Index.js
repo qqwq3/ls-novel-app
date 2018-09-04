@@ -205,6 +205,7 @@ class Classification extends Component<Props>{
     renderNewNav(){
         const propRecords = this.props.records ? this.props.records : {};
         const records = Object.keys(propRecords);
+
         return (
             <View style={[styles.newNav, Styles.paddingHorizontal15]}>
                 <View style={[styles.newInner]}>
@@ -239,9 +240,13 @@ class Classification extends Component<Props>{
     renderNewBody(){
         const propRecords = this.props.records ? this.props.records : {};
         const records = Object.values(propRecords);
-        const boy=['东方玄幻 、异界大陆','西方玄幻 、亡灵异族','传统武侠 、新派武侠','古典仙侠 、幻想修仙','都市生活 、异术超能','娱乐明星 、官场沉浮','穿越历史 、架空历史','军事战争 、战争幻想','游戏生涯 、电子竞技','体育竞技 、篮球运动','星际战争 、时空穿梭','推理侦探 、恐怖惊悚','武侠同人 、动漫同人','清新小说 、纯洁恋爱',]
-        const girl=['穿越时空 、古代历史',' 豪门总裁 、都市生活','青春小说 、校园恋爱',' 古代纯爱 、现代纯爱','玄幻异世 、奇幻魔法','新旧武侠 、幻想修仙','异界超能 、幻想世界','游戏生涯 、电子竞技','悬疑破案 、灵异事件','影视同人 、游戏同人','京城贵妇 、豪门世家','傲娇腐女 、呆萌甜心',]
+        //const boy=['东方玄幻 、异界大陆','西方玄幻 、亡灵异族','传统武侠 、新派武侠','古典仙侠 、幻想修仙','都市生活 、异术超能','娱乐明星 、官场沉浮','穿越历史 、架空历史','军事战争 、战争幻想','游戏生涯 、电子竞技','体育竞技 、篮球运动','星际战争 、时空穿梭','推理侦探 、恐怖惊悚','武侠同人 、动漫同人','清新小说 、纯洁恋爱',]
+        //const girl=['穿越时空 、古代历史',' 豪门总裁 、都市生活','青春小说 、校园恋爱',' 古代纯爱 、现代纯爱','玄幻异世 、奇幻魔法','新旧武侠 、幻想修仙','异界超能 、幻想世界','游戏生涯 、电子竞技','悬疑破案 、灵异事件','影视同人 、游戏同人','京城贵妇 、豪门世家','傲娇腐女 、呆萌甜心',]
         const press=['经典著作 、古代历史','人物传记 、历史枭雄','励志拼搏 、复制成功','人文著作 、天干地支','金融科学 、理财绝学','时尚风向 、生活技巧','幼儿健康 、养生保养','青春校园 、古代言情','经典外文 、名人著作','政治时事 、历史战争',]
+        const boy=['东方玄幻 、异界大陆','传统武侠 、新派武侠','架空历史 、两宋元明','虚拟网游 、游戏异界','未来世界 、进化变异','灵异鬼怪 、恐怖惊悚','青春小说 、校园恋爱','京城贵妇 、豪门世家' ]
+        const girl=['生活异能 、重生热血',' 总裁爽文 、豪阀相争','重游历史 、天马行空',' 领主贵族 、掌控命运','大千世界 、无奇不有',]
+        const commonWidth = (width - 3 * moderateScale(15)) / 2;
+        // const commonWidth = ((width -  moderateScale(15)) / 2) - moderateScale(15);
 
         return (
             <View onLayout={this.contentLayout.bind(this)} style={[styles.bookContent]}>
@@ -264,27 +269,53 @@ class Classification extends Component<Props>{
                                         showsHorizontalScrollIndicator={false}
                                         style={[styles.scrollContent, {height: this.state.contentHeight, width: width}]}
                                     >
-                                        <View style={[{flexWrap: 'wrap', flexDirection:'row'}]}>
+                                        <View style={[{
+                                            flexWrap: 'wrap',
+                                            flexDirection:'row',
+                                            paddingBottom: moderateScale(15)
+                                        }]}>
                                             {
                                                 (item || []).map((menu, j) => {
                                                     return (
                                                         <TouchableOpacity
                                                             activeOpacity={0.75}
                                                             key={j}
-                                                            style={[styles.bookBox, Styles.flexCenter,{width: width / 2}]}
+                                                            style={[styles.bookBox, {
+                                                                width: commonWidth,
+                                                                justifyContent:"center",
+                                                                marginLeft: moderateScale(15)
+                                                            }]}
                                                             onPress={this.cateMenu.bind(this, item, j)}
                                                         >
-
                                                             <LinearGradient colors={['#FFFFFF','#F7F6FC']} start={{x:0,y:0.5}}>
-                                                            <View style={[styles.bookText]}>
-                                                                <Text style={[Fonts.fontFamily, Fonts.fontSize14, Colors.gray_404040]}>{ menu.categoryName }</Text>
-                                                                <View style={[styles.pic]}>
-                                                                    <Image source={{uri: menu.cover}} resizeMode={'contain'} style={[styles.pic]}/>
+                                                                <View style={[styles.bookText,{width: commonWidth}]}>
+                                                                    <Text style={[Fonts.fontFamily, Fonts.fontSize14, Colors.gray_404040]}>{ menu.categoryName }</Text>
+                                                                    <View style={[styles.pic]}>
+                                                                        <Image source={{uri: menu.cover}} resizeMode={'contain'} style={[styles.pic]}/>
+                                                                    </View>
                                                                 </View>
-                                                            </View>
                                                             </LinearGradient>
                                                             <View>
-                                                                <Text style={[Fonts.fontFamily, Fonts.fontSize12, Colors.gray_c0c0c0,{textAlign:'center',width:scale(150),borderColor:'#F2F2F2',borderWidth:scale(1),borderTopWidth:0}]}>{index === 0 ? press[j] :''}{index === 1 ? boy[j] :''}{index === 2 ? girl[j] :''}</Text>
+                                                                <Text
+                                                                    style={[
+                                                                        Fonts.fontFamily,
+                                                                        Fonts.fontSize12,
+                                                                        Colors.gray_c0c0c0,
+                                                                        {
+                                                                            textAlign:'center',
+                                                                            width: commonWidth,
+                                                                            borderColor:'#F2F2F2',
+                                                                            borderWidth: moderateScale(0.6),
+                                                                            borderTopWidth: 0,
+                                                                            borderBottomLeftRadius: moderateScale(4),
+                                                                            borderBottomRightRadius: moderateScale(4),
+                                                                            paddingVertical: verticalScale(2)
+                                                                        }]}
+                                                                >
+                                                                    { menu.maleFemale === 'press' ? press[j] : '' }
+                                                                    { menu.maleFemale === 'male' ? boy[j] : '' }
+                                                                    { menu.maleFemale === 'female' ? girl[j] : '' }
+                                                                </Text>
                                                             </View>
                                                         </TouchableOpacity>
                                                     )
@@ -311,6 +342,9 @@ class Classification extends Component<Props>{
 }
 
 const styles = ScaledSheet.create({
+    newBookBox: {
+        paddingTop: '15@ms',
+    },
     newNavOnPress: {
         marginRight: '30@ms',
     },
@@ -341,14 +375,18 @@ const styles = ScaledSheet.create({
     },
     bookText: {
         height:'90@vs',
-        width:'150@s',
+        // width:'150@s',
         paddingLeft: '10@ms',
         paddingTop: '10@ms',
-        borderWidth:'1@s',
+        borderWidth:'0.6@ms',
         borderColor:'#F2F2F2',
+        // borderRadius: '4@ms',
+        borderTopLeftRadius: '4@ms',
+        borderTopRightRadius: '4@ms',
     },
     bookBox: {
-        paddingTop: '30@ms',
+        //paddingTop: '30@ms',
+        paddingTop: '15@ms',
     },
     scrollContent: {
         width: '100%',

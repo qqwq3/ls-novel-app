@@ -13,7 +13,7 @@ import Header from '../../components/Header';
 import { pixel, width } from "../../common/Tool";
 import NovelFlatList from '../../components/NovelFlatList';
 import Books from '../../components/Books';
-import { reloadClassification, loadClassification } from "../../actions/Classification";
+import { reloadRanking, loadRanking } from "../../actions/Rankings";
 import { RefreshState, loadImage, numberConversion } from "../../common/Tool";
 
 type Props = {};
@@ -29,7 +29,7 @@ class SecondCate extends Component<Props>{
                 activeIcon={tab.classification.activeIcon}
             />
         ),
-        tabBarLabel: '分类',
+        tabBarLabel: '排行榜',
         header: null
     };
     constructor(props){
@@ -42,7 +42,7 @@ class SecondCate extends Component<Props>{
         this.onHeaderRefresh && this.onHeaderRefresh(RefreshState.HeaderRefreshing);
     }
     componentWillReceiveProps(nextProps) {
-        // console.log('secondCate', nextProps);
+        console.log('ranksecondCate', nextProps);
     }
     // 返回 - function
     _goBack(){
@@ -53,7 +53,7 @@ class SecondCate extends Component<Props>{
     renderHeader(){
         const { navigation } = this.props;
         const index = navigation.state.params.index;
-        const item = navigation.state.params.item[index].categoryName;
+        const item = navigation.state.params.item[index].rankNameTag;
         //const m = this.textControl(item[0].maleFemale);
 
         return (
@@ -156,63 +156,22 @@ class SecondCate extends Component<Props>{
                     <View style={[styles.BookMarkBox, Styles.paddingVertical15, styles.menuInnerBottomBorder]}>
                         <Books source={{uri: uri}} size={'large'} clickAble={false}/>
                         <View style={[styles.BookMarkMassage, Styles.marginLeft15]}>
-                            <View style={[ Styles.marginRight15,{flexDirection:'row',justifyContent:'space-between'}]}>
-                                <View>
-                                    <Text style={[styles.BookMarkTitle, Fonts.fontFamily, Fonts.fontSize15, Colors.gray_404040]} numberOfLines={1}>
-                                        { item.title }
-                                    </Text>
-                                </View>
-                                <View>
-                                    <Text style={[comFontStyles,Colors.gray_b2b2b2,{fontSize:scale(10)}]}>{ numberConversion(item.totalLikes) || 0 }</Text>
-                                </View>
-                            </View>
-                            <View style={[styles.BookMarkNew, Styles.marginRight15,{marginTop:moderateScale(12)}]}>
+                            <Text style={[styles.BookMarkTitle, Fonts.fontFamily, Fonts.fontSize15, Colors.gray_404040]} numberOfLines={1}>
+                                { item.title }
+                            </Text>
+                            <View style={[styles.BookMarkNew, Styles.marginRight15 ]}>
                                 <View style={{maxWidth:230}}>
-                                    <Text style={[comFontStyles]} numberOfLines={3}>
+                                    <Text style={comFontStyles} numberOfLines={2}>
                                         { Description ? Description : ''}
                                     </Text>
                                 </View>
                             </View>
-                            <View style={[styles.BookMarkNew, Styles.marginRight15,{justifyContent:'space-between',alignItems:'flex-end'}]}>
-                                <View style={{flexDirection:'row'}}>
-                                    <View style={{marginRight: 5}}>
-                                        <Text
-                                            style={[
-                                                comFontStyles,
-                                                Colors.gray_b2b2b2,{
-                                                width:scale(100)}
-                                            ]}
-                                            numberOfLines={1}
-                                        >
-                                            { item.author ? item.author.name : '' }
-                                        </Text>
-                                    </View>
+                            <View style={[styles.BookMarkNew, Styles.marginRight15]}>
+                                <View style={{marginRight: 5}}>
+                                    <Text style={comFontStyles}>{ item.author ? item.author.name : '' }</Text>
                                 </View>
                                 <View>
-                                    { item && item.status && item.status.value === 1 ?
-                                        <Text style={{
-                                            fontSize: scale(9),
-                                            color: '#cc99ff',
-                                            borderWidth: moderateScale(0.6),
-                                            borderRadius: moderateScale(4),
-                                            borderColor: '#cc99ff',
-                                            marginRight: moderateScale(5),
-                                            padding: moderateScale(2)
-                                        }}>
-                                            {'连载中'}
-                                        </Text> :
-                                        <Text style={{
-                                            fontSize: scale(9),
-                                            color: '#22DD6D',
-                                            borderWidth: moderateScale(0.6),
-                                            borderRadius: moderateScale(4),
-                                            borderColor: '#22DD6D',
-                                            marginRight: moderateScale(5),
-                                            padding: moderateScale(2)
-                                        }}>
-                                            {'已完结'}
-                                        </Text>
-                                    }
+                                    <Text style={comFontStyles}>{ numberConversion(item.totalLikes) || 0 }人在阅读</Text>
                                 </View>
                             </View>
                         </View>
@@ -228,23 +187,24 @@ class SecondCate extends Component<Props>{
     }
     // 头部刷新 - function
     onHeaderRefresh(refreshState){
-        const { navigation, reloadClassification } = this.props;
+        const { navigation, reloadRanking } = this.props;
         const index = navigation.getParam('index');
         const item = navigation.getParam('item');
-        reloadClassification && reloadClassification(item[index].id, refreshState, 0);
+console.log('5555',item[index]);
+        reloadRanking && reloadRanking(item[index].categorys[0].id, refreshState, 0);
     }
     // 底部加载 - function
     onFooterRefresh(refreshState){
-        const { loadClassification, navigation, currentOffset } = this.props;
+        const { loadRanking, navigation, currentOffset } = this.props;
         const index = navigation.getParam('index');
         const item = navigation.getParam('item');
         const records = this.props.records ? this.props.records : [];
 
-        loadClassification && loadClassification(item[index].id, refreshState, currentOffset, records);
+        loadRanking && loadRanking(item[index].categorys[0].id, refreshState, currentOffset, records);
     }
     render(){
         return (
-            <View style={[Styles.container, {backgroundColor: BackgroundColor.bg_fff}]}>
+            <View style={[Styles.container, {backgroundColor: BackgroundColor.bg_f1f1f1}]}>
                 { this.renderHeader() }
                 { this.renderContent() }
             </View>
@@ -308,13 +268,13 @@ const styles = ScaledSheet.create({
 });
 
 const mapStateToProps = (state, ownProps) => {
-    let data = state.getIn(['classification','secondCategory']);
+    let data = state.getIn(['rankings','secondCategory']);
 
     if(Immutable.Map.isMap(data)){ data = data.toJS() }
     return { ...ownProps, ...data };
 };
 
-export default connect(mapStateToProps,{ reloadClassification, loadClassification })(SecondCate);
+export default connect(mapStateToProps,{ reloadRanking, loadRanking })(SecondCate);
 
 
 

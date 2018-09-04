@@ -3,15 +3,9 @@
 
 import React,{ Component } from 'react';
 import {
-    View,
-    Text,
-    TouchableOpacity,
-    Image,
-    TextInput,
-    Keyboard,
-    ScrollView,
-    Alert,
-    BackHandler,
+    View, Text, TouchableOpacity,
+    Image, TextInput, Keyboard,
+    ScrollView, Alert, BackHandler,
     StatusBar
 } from 'react-native';
 import Immutable from 'immutable';
@@ -22,9 +16,13 @@ import Highlighter from 'react-native-highlight-words';
 import { Styles, ScaledSheet, Img, Fonts, Colors, BackgroundColor } from "../../common/Style";
 import { mix, def } from "../../common/Icons";
 import Header from '../../components/Header';
-import { height, infoToast, closeInfoToast, loadImage, numberConversion, pixel, width } from "../../common/Tool";
+import {
+    height, infoToast, closeInfoToast,
+    loadImage, numberConversion,
+    pixel, width
+} from "../../common/Tool";
 import Books from '../../components/Books';
-import { reloadSearch, loadSearch, cleanSearch } from "../../actions/Classification";
+import { reloadSearch, loadSearch, cleanSearch, hotSearch } from "../../actions/Classification";
 import NovelFlatList from '../../components/NovelFlatList';
 import { RefreshState } from "../../common/Tool";
 import DefaultDisplay from "../../components/DefaultDisplay";
@@ -39,13 +37,13 @@ type Props = {
     currentOffset: ?number,
     refreshState: ?number,
     totalRecords?: number | string,
+    hotQuery: Array<any>,
+    hotSearch: () => void
 };
-
-type State = {};
 
 const ITEM_HEIGHT = verticalScale(125);
 
-class SearchEngines extends Component<Props, State, *>{
+class SearchEngines extends Component<Props>{
     static defaultProps = {
         records: [],
         currentOffset: 12,
@@ -60,20 +58,26 @@ class SearchEngines extends Component<Props, State, *>{
             searchRecords: [],
             searchKeywordStatus: true,
             searchDefaultValue: '',
+            hotQuery: [],
         };
         this.errorTiem = Date.now();
         this.toast = null;
+        this.hotSearchUpdateTime = Date.now();
     }
     async componentWillMount(){
-        this._keyboardHide = Keyboard.addListener('keyboardDidHide',this._keyboardDidHideHandler.bind(this));
+        this._keyboardHide = Keyboard.addListener('keyboardDidHide', this._keyboardDidHideHandler.bind(this));
 
         let _arr = await commonLoad('searchKeywords');
         if(_arr) { this.setState({searchRecords: _arr.searchRecords}) }
     }
     componentDidMount() {
         // this.onHeaderRefresh && this.onHeaderRefresh(RefreshState.HeaderRefreshing);
+
+        // 获取热搜索数据
+        this.props.hotSearch && this.props.hotSearch();
     }
     componentWillReceiveProps(nextProps) {
+        // 错误提示
         if(nextProps.error && nextProps.error.timeUpdated > this.errorTiem && this.state.searchStatus){
             this.errorTiem = nextProps.error.timeUpdated;
 
@@ -82,6 +86,14 @@ class SearchEngines extends Component<Props, State, *>{
             }
 
             this.setState({searchStatus: false});
+        }
+
+        // 加载热搜数据
+        if(nextProps.hotSearchUpdateTime > this.hotSearchUpdateTime && nextProps.hotQuery){
+            let hotQuery = nextProps.hotQuery;
+
+            this.hotSearchUpdateTime = nextProps.hotSearchUpdateTime;
+            this.setState({hotQuery});
         }
     }
     componentWillUnmount(){
@@ -190,12 +202,12 @@ class SearchEngines extends Component<Props, State, *>{
                                 <Text style={textStyles} numberOfLines={1}>最新章节</Text>
                             </View>
                             <View style={{maxWidth: scale(193)}}>
-                                <Text style={textStyles} numberOfLines={1}>{ item.latestChapter.title }</Text>
+                                <Text style={textStyles} numberOfLines={1}>{ (item.latestChapter && item.latestChapter.title) || '无' }</Text>
                             </View>
                         </View>
                         <View style={[styles.BookMarkNew, {alignItems:'flex-end', justifyContent: 'space-between'}]}>
                             <View style={[{marginRight: moderateScale(5), flexDirection: 'row'}]}>
-                                <Text style={textStyles} numberOfLines={1}>作者：</Text>
+                                {/*<Text style={textStyles} numberOfLines={1}>作者：</Text>*/}
                                 <Highlighter
                                     style={textStyles}
                                     numberOfLines={1}
@@ -231,6 +243,78 @@ class SearchEngines extends Component<Props, State, *>{
             searchValue: word,
         });
     }
+    // 上次搜索过 - demo
+    renderSearchRecords(){
+        const { searchRecords } = this.state;
+
+        return this.publicSearchDemo('搜索历史', _ => {
+            return searchRecords.map((word, index) => {
+                return (
+                    <TouchableOpacity
+                        key={index}
+                        activeOpacity={0.50}
+                        onPress={this._keywordSearch.bind(this, word)}
+                        style={[styles.memorySingleBox,  Styles.marginRight15, Styles.marginBottom15,]}
+                    >
+                        <Text style={[Fonts.fontFamily, Fonts.fontSize12, Colors.orange_f3916b]}>{ word }</Text>
+                    </TouchableOpacity>
+                )
+            })
+        }, _ => {
+            return (
+                <TouchableOpacity
+                    activeOpacity={0.50}
+                    style={[styles.memoryAllClean, Styles.flexCenter]}
+                    onPress={this._memoryKeywordsClean.bind(this)}
+                >
+                    <Text style={[Fonts.fontFamily, Fonts.fontSize12, Colors.gray_808080]}>全部清空</Text>
+                </TouchableOpacity>
+            );
+        });
+    }
+    // 热门搜索 - demo
+    renderHotSearch(){
+        const { hotQuery } = this.state;
+
+        return this.publicSearchDemo('热门搜索', _ => {
+            return (
+                hotQuery.length !== 0 ?
+                    hotQuery.map((item, index) => {
+                        return (
+                            <TouchableOpacity
+                                key={index}
+                                activeOpacity={0.50}
+                                onPress={this._openDetail.bind(this, item)}
+                                style={[styles.hotSearchBox,  Styles.marginRight15, Styles.marginBottom15,]}
+                            >
+                                <Text style={[Fonts.fontFamily, Fonts.fontSize12, Colors.orange_f3916b]}>{ item.title }</Text>
+                            </TouchableOpacity>
+                        );
+                    }) :
+                    <View style={[styles.memoryAllClean, Styles.flexCenter, {width: width - moderateScale(30)}]}>
+                        <Text style={[Fonts.fontFamily, Fonts.fontSize12, Colors.gray_c0c0c0]}>加载中...</Text>
+                    </View>
+            );
+        });
+    }
+    // 公共 - demo
+    publicSearchDemo(title: string = '', callback: () => void, btnFunc: () => void){
+        return (
+            <View style={[styles.memoryBox]}>
+                <View style={[styles.memoryHeader, Styles.paddingHorizontal15]}>
+                    <Text style={[Fonts.fontFamily, Fonts.fontSize15, Colors.gray_404040]}>{ title }</Text>
+                </View>
+                <View style={[styles.memoryBody, Styles.paddingHorizontal15]}>
+                    { callback && callback() }
+                </View>
+                { btnFunc && btnFunc() }
+            </View>
+        );
+    }
+    // 线 - demo
+    renderLine(){
+        return (<View style={[Styles.line, {backgroundColor: BackgroundColor.bg_f1f1f1}]}/>);
+    }
     // 内容 - demo
     renderContent(){
         const { currentOffset, refreshState, totalRecords, records } = this.props;
@@ -240,34 +324,17 @@ class SearchEngines extends Component<Props, State, *>{
         if(searchRecords.length !== 0 && searchKeywordStatus){
             return (
                 <ScrollView showsVerticalScrollIndicator={false} style={styles.keywordsContent}>
-                    <View style={[styles.memoryBox]}>
-                        <View style={[styles.memoryHeader, Styles.paddingHorizontal15]}>
-                            <Text style={[Fonts.fontFamily, Fonts.fontSize15, Colors.gray_404040]}>上次搜索过</Text>
-                        </View>
-                        <View style={[styles.memoryBody, Styles.paddingHorizontal15, Styles.paddingBottom15]}>
-                            {
-                                searchRecords.map((word, index) => {
-                                    return (
-                                        <TouchableOpacity
-                                            key={index}
-                                            activeOpacity={0.50}
-                                            onPress={this._keywordSearch.bind(this, word)}
-                                            style={[styles.memorySingleBox,  Styles.marginRight15, Styles.marginBottom15,]}
-                                        >
-                                            <Text style={[Fonts.fontFamily, Fonts.fontSize12, Colors.orange_f3916b]}>{ word }</Text>
-                                        </TouchableOpacity>
-                                    )
-                                })
-                            }
-                        </View>
-                        <TouchableOpacity
-                            activeOpacity={0.50}
-                            style={[styles.memoryAllClean, Styles.flexCenter]}
-                            onPress={this._memoryKeywordsClean.bind(this)}
-                        >
-                            <Text style={[Fonts.fontFamily, Fonts.fontSize12, Colors.gray_808080]}>全部清空</Text>
-                        </TouchableOpacity>
-                    </View>
+                    { this.renderSearchRecords() }
+                    { this.renderLine() }
+                    { this.renderHotSearch() }
+                </ScrollView>
+            );
+        }
+
+        if(records.length === 0){
+            return (
+                <ScrollView showsVerticalScrollIndicator={false} style={styles.keywordsContent}>
+                    { this.renderHotSearch() }
                 </ScrollView>
             );
         }
@@ -275,8 +342,8 @@ class SearchEngines extends Component<Props, State, *>{
         return (
             <NovelFlatList
                 // getItemLayout={(data, index) => ({length: ITEM_HEIGHT, offset: ITEM_HEIGHT * index, index})}
-                data={records}
                 // ListEmptyComponent={this._listEmptyComponent.bind(this)}
+                data={records}
                 ListEmptyComponent={
                     <View style={[{height: _height, width: width}]}>
                         <DefaultDisplay />
@@ -389,6 +456,14 @@ const styles = ScaledSheet.create({
         paddingVertical: '10@ms',
         borderRadius: '2.5@ms',
     },
+    hotSearchBox: {
+        paddingHorizontal: '14@ms',
+        paddingVertical: '6@ms',
+        borderRadius: '50@ms',
+        borderWidth: moderateScale(0.8),
+        borderColor: BackgroundColor.bg_f3916b,
+        overflow: 'hidden'
+    },
     memoryBox: {
         overflow: 'hidden',
         position: 'relative',
@@ -480,6 +555,7 @@ const styles = ScaledSheet.create({
         position: 'relative'
     },
     demoRightStyles: {
+        marginTop: '6@ms',
         height: '100%',
         width: '60@s',
     },
@@ -498,46 +574,16 @@ const styles = ScaledSheet.create({
 
 const mapStateToProps = (state, ownProps) => {
     let data = state.getIn(['classification','search']);
+    let hotSearchData = state.getIn(['classification','hot']);
 
     if(Immutable.Map.isMap(data)){ data = data.toJS() }
-    return { ...ownProps, ...data };
+    if(Immutable.Map.isMap(hotSearchData)){ hotSearchData = hotSearchData.toJS() }
+
+    return { ...ownProps, ...data, ...hotSearchData };
 };
 
-export default connect(mapStateToProps,{reloadSearch, loadSearch, cleanSearch})(SearchEngines);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+export default connect(mapStateToProps,{
+    reloadSearch, loadSearch,
+    cleanSearch, hotSearch
+})(SearchEngines);
 

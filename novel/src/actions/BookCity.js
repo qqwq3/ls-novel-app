@@ -11,6 +11,7 @@ const _loadBookCity = (): ThunkAction => ({
     [CALL_API]: {
         type: 'GET_BOOK_CITY',
         endpoint: `book/get-promotion?promotion_id=2,3,4,5,6,7,8,9`,
+        //endpoint: 'book/get-promotion-zs'
     },
 });
 

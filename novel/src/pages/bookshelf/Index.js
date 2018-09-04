@@ -2,7 +2,11 @@
 'use strict';
 
 import React,{ Component } from 'react';
-import { View, Text, TouchableOpacity, Image, TouchableWithoutFeedback, BackHandler, Platform } from 'react-native';
+import {
+    View, Text, TouchableOpacity,
+    Image, TouchableWithoutFeedback,
+    BackHandler, Platform, AppState
+} from 'react-native';
 import Immutable from 'immutable';
 import Carousel from 'react-native-banner-carousel';
 import { withNavigationFocus } from 'react-navigation';
@@ -18,7 +22,7 @@ import ImageAndFonts from '../../components/ImageAndFonts';
 import Books from '../../components/Books';
 import NovelFlatList from '../../components/NovelFlatList';
 import { width, height, loadImage, RefreshState, infoToast, setStatusBar } from "../../common/Tool";
-import { updateBookshelf } from '../../actions/LocalAction';
+import { updateBookshelf, getTimerState } from '../../actions/LocalAction';
 import { SubmitApply, deleteUserData } from "../../actions/User";
 import Dialog from '../../components/Dialog';
 import BaseComponent from "../../components/BaseComponent";
@@ -27,6 +31,7 @@ import BaseComponent from "../../components/BaseComponent";
 // import AppMetadata from 'react-native-app-metadata';
 // import { CHANNEL_KEY } from "../../common/Keys";
 // import * as api from '../../common/Api';
+// import ToastForAndroid from '../../common/AndroidToast';
 
 type Props = {
     records: ?Array<any>,
@@ -57,6 +62,7 @@ class Bookshelf extends BaseComponent<Props>{
             delMap: new Map(),
             records: [],
             isShow:false,
+            appState: AppState.currentState
         };
         this.deleteTiem = Date.now();
         this.updateTime = Date.now();
@@ -65,8 +71,13 @@ class Bookshelf extends BaseComponent<Props>{
                 cover: require('../../images/banner/banner3.png'),
                 title: 'banner3'
             },
-
         ];
+        this.lastBackPressed = Date.now();
+    }
+    componentWillMount() {
+        // ToastForAndroid.testAndroidCallbackMethod("你好我是android原生toast",(obj)=>{
+        //     console.log('android-toast', obj);
+        // });
     }
     componentDidMount() {
         this.props.loadScopeAndState && this.props.loadScopeAndState();
@@ -85,8 +96,8 @@ class Bookshelf extends BaseComponent<Props>{
         }
 
         this.onHeaderRefresh && this.onHeaderRefresh(RefreshState.HeaderRefreshing);
+        AppState.addEventListener('change', this._handleAppStateChange.bind(this));
     }
-
     componentWillReceiveProps(nextProps) {
         super.componentWillReceiveProps(nextProps);
 
@@ -152,7 +163,17 @@ class Bookshelf extends BaseComponent<Props>{
     componentWillUnmount(){
         // 删除返回键监听
         this._removeEventListenerBackHandler();
+
+        AppState.removeEventListener('change', this._handleAppStateChange.bind(this));
     }
+    _handleAppStateChange = (nextAppState) => {
+        // 背面程序执行
+        if(nextAppState === 'background'){
+            this.props.getTimerState && this.props.getTimerState(false);
+        }
+
+        // this.setState({appState: nextAppState});
+    };
     // 监听设备返回键 - function
     _addEventListenerBackHandler(){
         // 安卓设备
@@ -178,6 +199,7 @@ class Bookshelf extends BaseComponent<Props>{
     // 立即退出 - function
     onDismissExit(){
         if(Platform.OS === 'android'){
+            this.props.getTimerState && this.props.getTimerState(false);
             BackHandler.exitApp();
         }
         this.popExitRef && this.popExitRef.modeHide();
@@ -201,13 +223,20 @@ class Bookshelf extends BaseComponent<Props>{
                 onConfirm={this.onConfirmExit.bind(this)}
             >
                 <View style={[Styles.flexCenter, Styles.flex1]}>
-                    <Text style={[Fonts.fontSize15, Fonts.fontFamily, Colors.gray_404040]}>亲，确定要退出小说天堂吗？</Text>
+                    <Text style={[Fonts.fontSize15, Fonts.fontFamily, Colors.gray_404040]}>亲，确定要退出畅乐读吗？</Text>
                 </View>
             </Dialog>
         );
     }
     // 设备返回键监听对应函数 - function
     _handleBack(){
+        // 最近2秒内按过back键，可以退出应用
+        if(this.lastBackPressed && this.lastBackPressed + 2000 >= Date.now()){
+            // this.props.getTimerState && this.props.getTimerState(false);
+            BackHandler.exitApp();
+            return false;
+        }
+        this.lastBackPressed = Date.now();
         this.popExitRef && this.popExitRef.modeShow();
         return true;
     }
@@ -327,6 +356,11 @@ class Bookshelf extends BaseComponent<Props>{
                         }
                         <View style={[styles.imageBox]}>
                             <Books source={{uri: loadImage(item.bookId)}} clickAble={false}/>
+                            {
+                                Number(item.isUpdate) === 1 ?
+                                    <Image source={bookshelf.update} style={{position:'absolute',top:0,left:0,zIndex:10}}/>
+                                    :null
+                            }
                             <Text
                                 style={[
                                     styles.CollectBookTitle,
@@ -401,7 +435,7 @@ class Bookshelf extends BaseComponent<Props>{
         if(records && records.length === 0){
             return (
                 <View style={[styles.noDataContent]}>
-                    { this.renderBanner() }
+                    {/*{ this.renderBanner() }*/}
                     <View style={[{flex: 1}, Styles.flexCenter]}>
                         <Image source={def.noData} style={[Img.resizeModeContain,{marginBottom: moderateScale(20)}]}/>
                         <Text style={[Fonts.fontFamily, Fonts.fontSize16, Colors.gray_b2b2b2]}>
@@ -533,7 +567,7 @@ class Bookshelf extends BaseComponent<Props>{
     // 去我的界面 - function
     _myOnPress(){
         const { navigation } = this.props;
-        navigation && navigation.navigate('My')
+        navigation && navigation.navigate('My');
     }
     render(){
         return (
@@ -620,7 +654,8 @@ const styles = ScaledSheet.create({
     },
     imageBox: {
         maxWidth: '75@ms',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        position:'relative'
     },
     CollectBookTitle: {
         fontWeight: '100',
@@ -698,7 +733,7 @@ export default withNavigationFocus(connect(mapStateToProps,{
     reloadBookshelf, loadBookshelf,
     singleBookDel, batchBookDel,
     updateBookshelf, SubmitApply,
-    deleteUserData
+    deleteUserData, getTimerState
 })(Bookshelf));
 
 

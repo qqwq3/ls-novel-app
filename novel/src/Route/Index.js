@@ -31,6 +31,7 @@ import ChapterDirectory from '../pages/common/ChapterDirectory';
 import ShareBookCurrency from '../pages/agent/ShareBookCurrency';
 import AgentHtml from "../pages/my/AgentHtml";
 import BookComment from '../pages/reader/BookComment';
+import RankSecondCate from '../pages/rankings/RankSecondCate'
 
 const TabRouteConfigs = {
     Bookshelf:      { screen: Bookshelf },
@@ -84,8 +85,8 @@ const TabNavigatorConfigs = {
 const Tab = createMaterialTopTabNavigator(TabRouteConfigs, TabNavigatorConfigs);
 
 const StackRouteConfigs = {
-    SexSelection:      { screen: SexSelection },
     Tab:               { screen: Tab },
+    SexSelection:      { screen: SexSelection },
     Feedback:          { screen: Feedback },
     SearchEngines:     { screen: SearchEngines },
     Comments:          { screen: Comments },
@@ -106,11 +107,13 @@ const StackRouteConfigs = {
     ShareBookCurrency: { screen: ShareBookCurrency },
     AgentHtml:         { screen: AgentHtml },
     BookComment:       { screen: BookComment },
+    RankSecondCate:    { screen: RankSecondCate},
 };
 
 const StackNavigatorConfigs = {
     mode: 'modal',
     headerMode: 'none',
+    initialRouteName: 'SexSelection',
     navigationOptions: {
         gesturesEnabled: false
     },

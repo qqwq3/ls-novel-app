@@ -108,6 +108,13 @@ const user = (state = initialState, action: Action) => {
                     ...action.response
                 });
 
+            // 分享回调
+            case 'POST_SHARE_USER_SUCCESS':
+                return state.mergeDeepIn(action.params.stateKeys, {
+                    timeUpdated: Date.now(),
+                    ...action.response
+                });
+
             // 分类二级 - 刷新 - 成功
             case 'RELOAD_COMMENTS_USER_SUCCESS':
                 return state.setIn(action.params.stateKeys,{
@@ -180,6 +187,23 @@ const user = (state = initialState, action: Action) => {
                     ...action.response,
                 });
 
+            // 删除我的阅读记录 - 单个操作
+            case 'DELTELE_SINGLE_HISTORICAL_USER_SUCCESS':
+                return state.setIn(action.params.stateKeys,{
+                    deleteSingleTimeUpdate: Date.now(),
+                    deleteSingle: {
+                        ...action.response
+                    },
+                });
+
+            // 删除我的书评 - 单个操作
+            case 'DELTELE_SINGLE_COMMENTS_USER_SUCCESS':
+                return state.setIn(action.params.stateKeys,{
+                    deleteSingleTimeUpdate: Date.now(),
+                    deleteSingle: {
+                        ...action.response
+                    },
+                });
         }
 
         // 列表类单独的处理

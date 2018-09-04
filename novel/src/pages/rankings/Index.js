@@ -191,7 +191,20 @@ class Rankings extends Component<Props>{
                         <View style={{flexDirection: 'row'}}>
                             <Text style={[styles.rankNumber, index > 8 ? styles.left1 : styles.left2]}>{index + 1}</Text>
                             <Image source={iconGateway} style={[Img.resizeModeContain, styles.crownImage]} />
+                            {/*{item && item.status ===1?*/}
+
+                                {/*<Text numberOfLines={1} style={[ {fontSize:scale(10),color:'#b2b2b2',textAlign:'center',marginRight:moderateScale(5),padding:moderateScale(2)}]}>{'连载'}</Text>*/}
+                                {/*:   <Text numberOfLines={1} style={[ {fontSize:scale(10),color:'#b2b2b2',textAlign:'center',marginRight:moderateScale(5),padding:moderateScale(2)}]}>{'完结'}</Text>*/}
+
+                            {/*}*/}
                         </View>
+                    </View>
+
+
+                    <View style={[Styles.paddingRight15]}>
+                        <Text style={[styles.bookSectionText, Fonts.fontSize12, Colors.gray_b2b2b2]} numberOfLines={3}>
+                            { item.description === '' ? '暂无描述' : Description }
+                        </Text>
                     </View>
 
                     <View style={[styles.bookSectionBase]}>
@@ -199,17 +212,37 @@ class Rankings extends Component<Props>{
                             <Text numberOfLines={1} style={[ Fonts.fontSize12, Colors.gray_808080]}>{ item.authorName || '' }</Text>
                         </View>
                         <View style={styles.ready}>
-                            <Text numberOfLines={1} style={[ {fontSize:scale(9),color:'#EEC591',borderWidth:scale(1),borderRadius:moderateScale(3),borderColor:'#EEC591',textAlign:'center',lineHeight:verticalScale(20),marginRight:moderateScale(5),width:scale(40)}]}>{ item.categoryName || '' }</Text>
-                            <Text numberOfLines={1} style={[{fontSize:scale(9),color:'#DDDDDD',borderWidth:scale(1),borderRadius:moderateScale(3),borderColor:'#DDDDDD',textAlign:'center',lineHeight:verticalScale(20),width:scale(40)}]}>{ numberConversion(item.totalLikes || 0) }</Text>
+                            <Text
+                                numberOfLines={1}
+                                style={[{
+                                    fontSize:scale(9),
+                                    color:'#b2b2b2',
+                                    borderWidth: moderateScale(0.6),
+                                    borderRadius:moderateScale(4),
+                                    borderColor:'#b2b2b2',
+                                    textAlign:'center',
+                                    marginRight:moderateScale(5),
+                                    padding:moderateScale(2)
+                                }]}
+                            >
+                                { item.categoryName || '' }
+                            </Text>
+                            <Text
+                                numberOfLines={1}
+                                style={[{
+                                    fontSize:scale(9),
+                                    color:'#FFA07A',
+                                    borderWidth: moderateScale(0.6),
+                                    borderRadius:moderateScale(4),
+                                    borderColor:'#FFA07A',
+                                    textAlign:'center',
+                                    padding:moderateScale(2)
+                                }]}
+                            >
+                                { numberConversion(item.totalLikes || 0) }
+                            </Text>
                         </View>
                     </View>
-
-                    <View style={[Styles.paddingRight15]}>
-                        <Text style={[styles.bookSectionText, Fonts.fontSize12, Colors.gray_808080]} numberOfLines={3}>
-                            { item.description === '' ? '暂无描述' : Description }
-                        </Text>
-                    </View>
-
                 </View>
             </TouchableOpacity>
         );
@@ -318,7 +351,7 @@ const styles = ScaledSheet.create({
         marginBottom: '5@ms'
     },
     bookSectionBase: {
-        marginBottom: '5@ms',
+        marginTop: '5@ms',
         flexDirection: 'row'
     },
     bookSectionText: {

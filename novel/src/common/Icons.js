@@ -55,6 +55,8 @@ const mix = {
     login: require('../images/mix/img_login.png'),
     addBook: require('../images/mix/icon_add_book.png'),
     ruleClose: require('../images/mix/icon_rule_close.png'),
+    lunchImage: require('../images/mix/launch.jpg'),
+    qr: require('../images/mix/qr.jpg'),
 };
 
 const def = {
@@ -65,7 +67,8 @@ const def = {
 const bookshelf = {
     select: require('../images/bookshelf/book_select.png'),
     popup:require('../images/bookshelf/popup_guide_to_signin.png'),
-    close:require('../images/bookshelf/icon_close.png')
+    close:require('../images/bookshelf/icon_close.png'),
+    update:require('../images/bookshelf/novel_update_tag.jpg'),
 };
 
 const bookCity = {
@@ -106,9 +109,8 @@ const agent = {
     applybg: require('../images/agent/agent_apply_main_bg2.png'),
     applybtn: require('../images/agent/apply_btn.png'),
     tick: require('../images/agent/green_tick.png'),
-    shareBg: require('../images/agent/coin_share_main_bg.png'),
-    shareVx:require('../images/agent/btn_share_to_moment.png'),
-    shareFriends:require('../images/agent/btn_share_to_friends_group.png'),
+    shareVx:require('../images/agent/btn_share_to_friends_group2.png'),
+    shareFriends:require('../images/agent/btn_share_to_moment2.png'),
     entrance: require('../images/agent/agent_entrance.png'),
     floatEntrance: require('../images/agent/float_entrance.png'),
     applyEntrance: require('../images/agent/apply_agent_entrance.png')

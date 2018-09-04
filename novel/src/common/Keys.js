@@ -28,8 +28,7 @@ export const PAGE_CONTROL_COMMENTS = 15;
 // 章节目录页数控制
 export const PAGE_CATALOG = 20;
 
-// 加载40页
-export const DOUBLE_PAGE_CATALOG = 40;
+export const DOUBLE_PAGE_CATALOG = 100;
 
 // 内部应用版本号
 export const VERSION = AppMetadata.ShortVersion;
@@ -47,7 +46,7 @@ export const DEPLOYMENT_KEYS = {
     ios: {
         STAGING: null,
         PRODUCTION: null
-    },
+    }
 };
 
 

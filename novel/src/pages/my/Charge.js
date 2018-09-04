@@ -1,17 +1,11 @@
 import React,{Component} from 'react';
 import {
-    Text,
-    View,
-    Image,
-    TextInput,
-    TouchableOpacity,
-    Dimensions,
-    Keyboard,
-    ImageBackground,
-    StatusBar,
+    Text, View, Image,
+    TextInput, TouchableOpacity, Dimensions,
+    Keyboard, ImageBackground, StatusBar,
 } from 'react-native';
 import Toast from 'react-native-root-toast';
-import {ChargeImg,arrow} from '../../common/Icons';
+import {ChargeImg, arrow, mix} from '../../common/Icons';
 import { connect } from  'react-redux';
 import Immutable from 'immutable';
 import { ScaledSheet, Fonts} from '../../common/Style' ;
@@ -58,13 +52,18 @@ class Charge extends BaseComponent<Props,State>{
         let agentWechat = "pob9990";
         let qrcodeImg = 'http://novel-res.oss-cn-hangzhou.aliyuncs.com/agent_qrcode/10.jpg';
         let unitPrice = 10;
+
         if(global.launchSettings && global.launchSettings.agentData && global.launchSettings.agentData.data) {
             agentWechat = global.launchSettings.agentData.data.wechat;
             qrcodeImg = global.launchSettings.agentData.data.qrcodeName;
             unitPrice = global.launchSettings.agentData.data.codeUnitPrice
         }
+
         return(
-            <ImageBackground source={ChargeImg.chargeBgImg} style={{height:'100%',width:ScreenWidth,position:'absolute',marginBottom:this.state.viewBgBottom}}>
+            <ImageBackground
+                source={ChargeImg.chargeBgImg}
+                style={{height:'100%',width:ScreenWidth,position:'absolute',marginBottom:this.state.viewBgBottom}}
+            >
                 <StatusBar
                      backgroundColor={'#1B0d61'} barStyle={'light-content'}
                 />
@@ -72,21 +71,22 @@ class Charge extends BaseComponent<Props,State>{
                     <Image source={arrow.leftWhite} style={[styles.leftArrow]}/>
                 </TouchableOpacity>
                     <View style={[styles.contentView,{bottom:this.state.viewBottom}]}>
-                        <View style={{marginBottom:moderateScale(15)}}>
-                            <Text style={[styles.chargeCode,Fonts.fontFamily,Fonts.fontSize24]}>充值码</Text>
+                        <View style={{marginBottom: moderateScale(15)}}>
+                            <Text style={[styles.chargeCode,Fonts.fontFamily,Fonts.fontSize24]}>微信客服二维码</Text>
                         </View>
-                            <TextInput placeholder='粘贴充值码' placeholderTextColor="#b2b2b2" style={[styles.copyCodeInput,Fonts.fontFamily,Fonts.fontSize12]}
-                            underlineColorAndroid='transparent'
-                            onChangeText={(text)=>{this.regChargeCode(text)}}
-                            />
-                            <TouchableOpacity style={styles.chargeButton} onPress={()=>{this.submitChargeCode()}}>
-                                 <Text style={[styles.chargeButtonText,Fonts.fontFamily,Fonts.fontSize15]} >立即充值</Text>
-                            </TouchableOpacity>
+                            {/*<TextInput placeholder='粘贴充值码' placeholderTextColor="#b2b2b2" style={[styles.copyCodeInput,Fonts.fontFamily,Fonts.fontSize12]}*/}
+                            {/*underlineColorAndroid='transparent'*/}
+                            {/*onChangeText={(text)=>{this.regChargeCode(text)}}*/}
+                            {/*/>*/}
+                            {/*<TouchableOpacity style={styles.chargeButton} onPress={()=>{this.submitChargeCode()}}>*/}
+                                 {/*<Text style={[styles.chargeButtonText,Fonts.fontFamily,Fonts.fontSize15]} >立即充值</Text>*/}
+                            {/*</TouchableOpacity>*/}
                             <View style={{marginBottom:moderateScale(10)}}>
-                                <Image source={{uri:qrcodeImg}} style={{width:scale(100),height:verticalScale(100)}} />
+                                {/*<Image source={{uri: qrcodeImg}} style={{width:scale(200),height:verticalScale(200)}} />*/}
+                                <Image source={mix.qr} style={{width:scale(200),height:verticalScale(200)}}/>
                             </View>
-                            <Text style={[styles.allText,styles.oneText,Fonts.fontFamily]}>每个充值码{unitPrice}元，可兑换1000书币</Text>
-                            <Text style={[styles.allText,styles.oneText,Fonts.fontFamily]}>购买充值码请联系微信客服：
+                            {/*<Text style={[styles.allText,styles.oneText,Fonts.fontFamily]}>每个充值码{unitPrice}元，可兑换1000书币</Text>*/}
+                            <Text style={[styles.allText,styles.oneText,Fonts.fontFamily]}>购买书币请联系微信客服：
                                 <Text style={[styles.twoText,Fonts.fontFamily]}>{ agentWechat }</Text>
                             </Text>
                     </View>
@@ -137,6 +137,7 @@ class Charge extends BaseComponent<Props,State>{
         this.props.ChargeCode && this.props.ChargeCode(agentTag, chargeCode)
     }
 }
+
 const styles = ScaledSheet.create({
     contentView:{
         position:'absolute',
@@ -180,8 +181,9 @@ const styles = ScaledSheet.create({
         fontSize:10
     },
     leftArrow:{
-        marginTop:'30@ms',
+        // marginTop:'30@ms',
         marginLeft:'15@ms',
+        marginTop: verticalScale(30 + StatusBar.currentHeight)
     }
 });
 

@@ -197,8 +197,6 @@ const mapStateToProps = (state, ownProps) => {
 };
 
 export default connect(mapStateToProps,{
-    weChatLogin,
-    loadScopeAndState,
-    updateBookshelf,
-    updateChapter
+    weChatLogin, loadScopeAndState,
+    updateBookshelf, updateChapter
 })(Login);

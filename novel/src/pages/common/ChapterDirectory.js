@@ -25,7 +25,7 @@ type Props = {
 
 type State = {};
 
-class ChapterDirectory extends Component<Props, State>{
+class ChapterDirectory extends BaseComponent<Props, State>{
     static defaultProps = {
         chapter: {},
     };
@@ -34,6 +34,7 @@ class ChapterDirectory extends Component<Props, State>{
         this.state = {
             currentIndex: 0,
             currentChapterHexId: null,
+            title: null,
         };
         this.errorTime = Date.now();
         this.chapterTime = Date.now();
@@ -42,16 +43,19 @@ class ChapterDirectory extends Component<Props, State>{
         const { navigation, chapter } = this.props;
         const type = navigation.getParam('type');
 
-        this.onHeaderRefreshChapter && this.onHeaderRefreshChapter(RefreshState.HeaderRefreshing);
-
         if(type === 'bookmark'){
            // this.onHeaderRefreshBookmark && this.onHeaderRefreshBookmark(RefreshState.HeaderRefreshing);
         }
 
-        //type !== 'chapter' && statusBarSet && statusBarSet.barHide();
+        // type !== 'chapter' && statusBarSet && statusBarSet.barHide();
 
-        if(Object.keys(chapter).length !== 0 ){
-            this.setState({currentChapterHexId: chapter.content[chapter.index / width].currentChapterHexId});
+        this.onHeaderRefreshChapter && this.onHeaderRefreshChapter(RefreshState.HeaderRefreshing);
+
+        if(chapter && Object.keys(chapter).length !== 0){
+            this.setState({
+                currentChapterHexId: chapter.content.length !== 0 ? chapter.content[chapter.index / width].currentChapterHexId : null,
+                title: chapter.content.length !== 0 ? chapter.content[chapter.index / width].title : null,
+            });
         }
     }
     componentWillUnmount() {
@@ -61,6 +65,7 @@ class ChapterDirectory extends Component<Props, State>{
         //type === 'chapter' && statusBarSet && statusBarSet.barShow();
     }
     componentWillReceiveProps(nextProps) {
+        super.componentWillReceiveProps(nextProps);
 
         // console.log('chapterDirectory.js',nextProps);
 
@@ -87,19 +92,11 @@ class ChapterDirectory extends Component<Props, State>{
         const bookId = item.bookId;
         const bookHexId = directory && directory.book && directory.book.hexId;
 
-        // const value = parseInt(sourceSiteIndex) >= parseInt(vipChapterIndex) ? '1' : '0';
-
-        updateChapter && updateChapter(true);
-        // navigation && navigation.navigate('Reader',{ hexId, bookId, bookHexId, direct: false});
-
         this.setState({currentChapterHexId: item.hexId});
+        updateChapter && updateChapter(true);
         fineCommonRemoveSingle && fineCommonRemoveSingle('allBookCapter', bookHexId + 'currentChapter');
 
-        navigation && navigation.navigate('Reader',{
-            chapterHexId,
-            bookHexId,
-            bookId
-        });
+        navigation && navigation.navigate('Reader',{chapterHexId, bookHexId, bookId});
     }
     // 返回 - function
     _goBack() {
@@ -142,10 +139,10 @@ class ChapterDirectory extends Component<Props, State>{
                 >
                     { item.title }
                 </Text>
-                {/*{*/}
-                    {/*(parseInt(item.sourceSiteIndex) >= parseInt(vipChapterIndex) && parseInt(vipChapterIndex) !== 0)*/}
-                    {/*? <Image source={readerImg.rmb} style={[Img.resizeModeContain, styles.rmbImage]}/> : null*/}
-                {/*}*/}
+                {
+                    (parseInt(item.sourceSiteIndex) >= parseInt(vipChapterIndex) && parseInt(vipChapterIndex) !== 0)
+                    ? <Image source={readerImg.rmb} style={[Img.resizeModeContain, styles.rmbImage]}/> : null
+                }
             </TouchableOpacity>
         );
 
@@ -286,6 +283,42 @@ class ChapterDirectory extends Component<Props, State>{
 
         navigation && navigation.navigate('Reader',{ hexId, bookId, direct: true, value: value });
     }
+    // 当前章节标题 - demo
+    renderCurrentChapter(){
+        if(!this.state.currentChapterHexId && !this.state.title){
+            return null;
+        }
+
+        return (
+            <TouchableOpacity
+                activeOpacity={0.5}
+                onPress={this.currentChapter.bind(this)}
+                style={[styles.currentChapterBox, Styles.row, Styles.flexCenter]}
+            >
+                <Text style={[Fonts.fontFamily, Fonts.fontSize16, Colors.orange_f3916b]}>
+                    { this.state.title }
+                </Text>
+            </TouchableOpacity>
+        );
+    }
+    // 当前章节 - function
+    currentChapter(){
+        const { navigation, updateChapter, directory } = this.props;
+        const chapterHexId = this.state.currentChapterHexId;
+        const bookId = directory && directory.book && directory.book.id;
+        const bookHexId = directory && directory.book && directory.book.hexId;
+
+        updateChapter && updateChapter(true);
+
+        this.setState({currentChapterHexId: chapterHexId});
+        fineCommonRemoveSingle && fineCommonRemoveSingle('allBookCapter', bookHexId + 'currentChapter');
+
+        navigation && navigation.navigate('Reader',{
+            chapterHexId,
+            bookHexId,
+            bookId
+        });
+    }
     render(){
         const { navigation } = this.props;
         const type = navigation.getParam('type');
@@ -293,6 +326,7 @@ class ChapterDirectory extends Component<Props, State>{
         return (
             <View style={[Styles.container]}>
                 { this.renderHeader() }
+                {/*{ this.renderCurrentChapter() }*/}
                 {
                     type === 'chapter' ? this.renderCatalog() :
                     <ScrollableTabView
@@ -345,6 +379,11 @@ class ReaderCatalogueMenu extends Component{
 }
 
 const styles = ScaledSheet.create({
+    currentChapterBox:{
+        height: '60@vs',
+        borderBottomColor: BackgroundColor.bg_e5e5e5,
+        borderBottomWidth: moderateScale(1 / pixel),
+    },
     rmbImage: {
         position: 'absolute',
         right: 0,
@@ -420,11 +459,16 @@ const mapStateToProps = (state, ownProps) => {
     const type = ownProps.navigation.getParam('type');
     const hexId = ownProps.navigation.getParam('hexId');
     let data = state.getIn(['chapterDirectory', type, hexId]);
-    let localData = state.getIn(['local','chapterTitle']);
+    let localData = state.getIn(['local','chapterTitle', hexId]);
+    let userData = state.getIn(['user','userData','baseInfo']);
 
     if(Immutable.Map.isMap(data)){ data = data.toJS() }
     if(Immutable.Map.isMap(localData)){ localData = localData.toJS() }
-    return { ...ownProps, ...data, ...localData };
+    if(Immutable.Map.isMap(userData)){ userData = userData.toJS() }
+    return {
+        ...ownProps, ...data,
+        ...localData , ...userData
+    };
 };
 
 export default connect(mapStateToProps,{

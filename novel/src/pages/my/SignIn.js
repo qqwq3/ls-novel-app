@@ -40,7 +40,7 @@ class SignIn extends BaseComponent<Props, State>{
     componentDidMount() {
         const { checkSignIn } = this.props;
 
-        setStatusBar && setStatusBar(BackgroundColor.bg_ff5a5a,true);
+        setStatusBar && setStatusBar(BackgroundColor.bg_ff5a5a, false);
         checkSignIn && checkSignIn();
     }
     componentWillReceiveProps(nextProps) {

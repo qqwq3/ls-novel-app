@@ -11,7 +11,7 @@ import { Styles, ScaledSheet, Img, Fonts, Colors, BackgroundColor } from "../../
 import TabBarIcon from '../../components/TabBarIcon';
 import { tab, my, agent} from "../../common/Icons";
 import Rows from '../../components/Rows';
-import { infoToast, statusBarSet, width } from "../../common/Tool";
+import {infoToast, setStatusBar, statusBarSet, width} from "../../common/Tool";
 import { VipData, MyData, SubmitApply, deleteUserData } from "../../actions/User";
 import BaseComponent from "../../components/BaseComponent";
 import StatusBarSet from '../../components/StatusBarSet';
@@ -52,7 +52,10 @@ class My extends BaseComponent<Props>{
 
         // 进入本组件
         if(!this.props.isFocused && nextProps.isFocused){
-            this.setState({statusBarBackgroundColor: '#f3916b',statusBarFontColor:'light-content'});
+            // this.setState({
+            //     statusBarBackgroundColor: '#f3916b',
+            //     statusBarFontColor:'light-content'
+            // });
 
             if (this.isAuthorized()) {
                 this.props.MyData && this.props.MyData();
@@ -60,11 +63,18 @@ class My extends BaseComponent<Props>{
             }
 
             this._loginOvertime(nextProps);
+
+            setStatusBar && setStatusBar('#f3916b', false);
         }
 
         // 离开本组件
         if(this.props.isFocused && !nextProps.isFocused){
-            this.setState({statusBarBackgroundColor: '#FFFFFF', statusBarFontColor:'dark-content'});
+            // this.setState({
+            //     statusBarBackgroundColor: '#FFFFFF',
+            //     statusBarFontColor:'dark-content'
+            // });
+
+            setStatusBar && setStatusBar('#FFFFFF', false);
         }
 
         if(nextProps && nextProps.applyAgentTimeUpdated > this.updateTime && nextProps.messageKeys && nextProps.messageKeys === 'my'){
@@ -76,7 +86,10 @@ class My extends BaseComponent<Props>{
                 const { navigation } = nextProps;
 
                 return navigation && navigation.navigate('AgentHtml', {
-                    agent: {loginStatus : nextProps.loginStatus, agentAdminUrl : nextProps.agentAdminUrl}
+                    agent: {
+                        loginStatus : nextProps.loginStatus,
+                        agentAdminUrl : nextProps.agentAdminUrl
+                    }
                 });
             }
             else if (applyState === 2) {
@@ -143,17 +156,13 @@ class My extends BaseComponent<Props>{
                             <View style={[styles.cardTx, Styles.flexCenter]}>
                                 {
                                     avatar ? <Image source={{uri: avatar}} style={[styles.cardTxImage]}/> :
-                                    <Image source={my.userDefault} style={[ styles.cardTxImage]}/>
+                                        <Image source={my.userDefault} style={[ styles.cardTxImage]}/>
                                 }
                             </View>
-                            <View style={{position:'absolute',right:0,zIndex:1000}}>
+                            <View style={{position:'absolute',bottom:0,right:0,zIndex:1000}}>
                                 { vipDay > 0 ? <Image source={my.vipYellow}/> : <Image source={my.vipGray}/> }
                             </View>
                         </TouchableOpacity>
-                        <TouchableOpacity
-                            activeOpacity={1}
-                            onPress={() => avatar ? {} : this._login()}
-                        >
                         <View style={[ Styles.paddingLeft15, {justifyContent:"center", alignItems:'flex-start'}]}>
                             <Text
                                 numberOfLines={1}
@@ -162,41 +171,40 @@ class My extends BaseComponent<Props>{
                                 { name ? name : '点击登录' }
                             </Text>
                             <View>
-                               { this._renderDay() }
+                                { this._renderDay() }
                             </View>
                         </View>
-                        </TouchableOpacity>
                     </View>
                     <View style={[styles.cardContent, Styles.marginTop15]}>
-                        <View>
-                            <View style={[ Styles.flexCenter]}>
-                                <Text style={[Fonts.fontFamily, Fonts.fontSize14, Colors.gray_404040]}>我的书币</Text>
+                        <View style={[Styles.flex1]}>
+                            <View style={[Styles.flex1, Styles.flexCenter]}>
+                                <Text style={[Fonts.fontFamily, Fonts.fontSize12, Colors.gray_808080]}>我的书币</Text>
                             </View>
-                            <View style={[ Styles.flexCenter]}>
+                            <View style={[Styles.flex1, Styles.flexCenter]}>
                                 <Text style={[Fonts.fontFamily, Fonts.fontSize20, Colors.orange_f3916b]}>
                                     { balance ? balance : 0 }
                                 </Text>
                             </View>
                         </View>
                         <View style={[styles.partingLine, Styles.flexCenter]}/>
-                        {/*<View style={[Styles.flex1,Styles.flexCenter,{position:'relative'}]}>*/}
-                            {/*<TouchableOpacity*/}
-                                {/*activeOpacity={0.5}*/}
-                                {/*style={[styles.openButs, Styles.flexCenter, styles.openVipCss, {top: verticalScale(-46)}]}*/}
-                                {/*onPress={this._OpenVip.bind(this)}*/}
-                            {/*>*/}
-                                {/*<Text style={[Fonts.fontFamily, Fonts.fontSize14, Colors.orange_f3916b]}>*/}
-                                    {/*{ vipDay > 0 ? '立即续费' : '开通VIP' }*/}
-                                {/*</Text>*/}
-                            {/*</TouchableOpacity>*/}
-                            {/*<TouchableOpacity*/}
-                                {/*activeOpacity={0.5}*/}
-                                {/*style={[styles.openButs, Styles.flexCenter]}*/}
-                                {/*onPress={this._bookMoneyRecharge.bind(this)}*/}
-                            {/*>*/}
-                                {/*<Text style={[Fonts.fontFamily, Fonts.fontSize14, Colors.orange_f3916b]}>书币充值</Text>*/}
-                            {/*</TouchableOpacity>*/}
-                        {/*</View>*/}
+                        <View style={[Styles.flex1,Styles.flexCenter,{position:'relative'}]}>
+                            <TouchableOpacity
+                                activeOpacity={0.5}
+                                style={[styles.openButs, Styles.flexCenter, styles.openVipCss, {top: verticalScale(-46)}]}
+                                onPress={this._OpenVip.bind(this)}
+                            >
+                                <Text style={[Fonts.fontFamily, Fonts.fontSize14, Colors.orange_f3916b]}>
+                                    { vipDay > 0 ? '立即续费' : '开通VIP' }
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                activeOpacity={0.5}
+                                style={[styles.openButs, Styles.flexCenter]}
+                                onPress={this._bookMoneyRecharge.bind(this)}
+                            >
+                                <Text style={[Fonts.fontFamily, Fonts.fontSize14, Colors.orange_f3916b]}>书币充值</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
             </View>
@@ -262,7 +270,7 @@ class My extends BaseComponent<Props>{
                 isRightConfigure={false}
                 nonConfigRightComponents={
                     <Text style={[Fonts.fontFamily, Fonts.fontSize12, Colors.gray_b2b2b2, { marginRight: moderateScale(12)}]}>
-                        {totalRead ? totalRead : "无" }
+                        { totalRead ? totalRead : "无" }
                     </Text>
                 }
                 showRightArrow={totalRead === 0 ? false : true}
@@ -319,7 +327,7 @@ class My extends BaseComponent<Props>{
             <Rows
                 isClick={false}
                 showLeftTitle={true}
-                leftTitle={'客服QQ'}
+                leftTitle={'客服qq群'}
                 showBottomBorder={false}
                 isRightConfigure={false}
                 nonConfigRightComponents={
@@ -446,7 +454,7 @@ class My extends BaseComponent<Props>{
             >
                 { this.renderHeader() }
                 { this.renderContent() }
-                { this.renderStatusBar() }
+                {/*{ this.renderStatusBar() }*/}
             </ScrollView>
         );
     }
@@ -482,10 +490,9 @@ const styles = ScaledSheet.create({
         flexDirection: 'row',
     },
     cardContent: {
-        display:'flex',
         flexDirection: 'row',
         overflow:'hidden',
-        marginLeft:'70@ms',
+        flex: 1,
     },
     partingLine: {
         width: '0.5@s',
@@ -505,9 +512,6 @@ const styles = ScaledSheet.create({
         paddingBottom: '10@ms',
     },
     card: {
-        display:'flex',
-        flexDirection: 'row',
-        alignItems:'center',
         height: '160@vs',
         backgroundColor: BackgroundColor.bg_fff,
         elevation: '4@ms',
@@ -551,11 +555,8 @@ const mapStateToProps = (state, ownProps) => {
 };
 
 export default withNavigationFocus(connect(mapStateToProps,{
-    VipData,
-    MyData,
-    SubmitApply,
-    deleteUserData,
-    updateBookshelf
+    VipData, MyData, SubmitApply,
+    deleteUserData, updateBookshelf
 })(My));
 
 

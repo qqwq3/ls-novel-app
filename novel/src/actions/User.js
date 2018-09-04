@@ -215,6 +215,24 @@ export const ApplyText = (mobile: number ,vcode :number) => (dispatch: Dispatch,
     return dispatch(_localApplyText(mobile,vcode));
 };
 
+// 分享回调
+const _localShare = (): ThunkAction => ({
+    params: {
+        stateKeys: ['userData','share'],
+    },
+    [CALL_API]: {
+        type: 'POST_SHARE_USER',
+        endpoint: `user/share_friend`,
+        options: {
+            method: 'POST',
+        }
+    },
+});
+
+export const localShare = () => (dispatch: Dispatch, getState: GetState) => {
+    return dispatch(_localShare());
+};
+
 // 下拉-刷新最新数据
 const _reloadMyComments = (refreshState, currentOffset): ThunkAction => ({
     params: {
@@ -306,5 +324,48 @@ const _deleteUserData = (): ThunkAction => ({
 export const deleteUserData = () => (dispatch: Dispatch, getState: GetState) => {
     return dispatch(_deleteUserData());
 };
+
+const _deleteUserHistorical = (bookHexId): ThunkAction => ({
+    params: {
+        stateKeys: ['userData', 'deleteHistorical'],
+    },
+    [CALL_API]: {
+        type: 'DELTELE_SINGLE_HISTORICAL_USER',
+        endpoint: `book/bookread/delete`,
+        options: {
+            method: 'POST',
+            body: dictToFormData({
+                book_id: bookHexId
+            })
+        }
+    },
+});
+
+// 删除我的阅读记录 - 单删
+export const deleteUserHistorical = (bookHexId: string) => (dispatch: Dispatch, getState: GetState) => {
+    return dispatch(_deleteUserHistorical(bookHexId));
+};
+
+const _deleteUserComments = (id): ThunkAction => ({
+    params: {
+        stateKeys: ['userData', 'deleteComments'],
+    },
+    [CALL_API]: {
+        type: 'DELTELE_SINGLE_COMMENTS_USER',
+        endpoint: `book/delete-comment `,
+        options: {
+            method: 'POST',
+            body: dictToFormData({
+                id: id
+            })
+        }
+    },
+});
+
+// 删除我的书评 - 单删
+export const deleteUserComments = (id: string | number) => (dispatch: Dispatch, getState: GetState) => {
+    return dispatch(_deleteUserComments(id));
+};
+
 
 

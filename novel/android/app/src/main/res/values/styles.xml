@@ -3,7 +3,14 @@
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
-        <item name="android:windowIsTranslucent">true</item>
+
+        <!--<item name="android:windowIsTranslucent">true</item>-->
+
+        <!--设置状态栏不占据空间-->
+        <item name="android:windowTranslucentStatus">true</item>
+
+        <!--设置状态栏字体颜色-->
+        <!-- <item name="android:windowLightStatusBar">true</item> -->
     </style>
 
 </resources>

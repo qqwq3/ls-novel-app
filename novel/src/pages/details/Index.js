@@ -1,7 +1,11 @@
 'use strict';
 
 import React, { Component } from 'react';
-import { View, Text, TouchableOpacity, Image, ScrollView, TouchableWithoutFeedback, Animated } from 'react-native';
+import {
+    View, Text, TouchableOpacity,
+    Image, ScrollView,
+    TouchableWithoutFeedback, Animated
+} from 'react-native';
 import Immutable from 'immutable';
 import { connect } from 'react-redux';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
@@ -16,8 +20,9 @@ import NovelFlatList from '../../components/NovelFlatList';
 import BaseComponent from "../../components/BaseComponent";
 import { commonShare, shareAddListener, shareRemoveListener } from "../../common/WxShare";
 import DrawerJsx from '../../components/DrawerJsx';
-import { updateBookshelf } from '../../actions/LocalAction';
+import { updateBookshelf, lightChapterTitle } from '../../actions/LocalAction';
 import SharePop from '../../components/SharePop';
+import {localShare} from "../../actions/User";
 import {
     addBookshelf, loadDetails,
     loadDetailSimilar, reloadBookComments,
@@ -25,6 +30,7 @@ import {
     cancelAddBookshelf
 } from '../../actions/Details';
 import { fineCommonRemoveSingle } from "../../common/Storage";
+import Toast from "react-native-root-toast";
 
 type Props = {};
 
@@ -295,7 +301,7 @@ class Details extends BaseComponent<Props> {
                     </View>
                 </View>
 
-                <View style={[Styles.row, {marginTop: moderateScale(12)}]}>
+                <View style={[Styles.row, {marginTop: moderateScale(12), flexWrap: 'wrap'}]}>
                     { this._similarItem() }
                 </View>
             </View>
@@ -304,7 +310,11 @@ class Details extends BaseComponent<Props> {
     // 公共 - 拿去数据 - function
     _refreshCurrentData(bookId, bookHexId, changeId: boolean = false){
         const { MinHeight, animation } = this.state;
-        const { loadDetails, loadDetailSimilar, reloadBookComments, login, checkIsAddBookshelf, navigation } = this.props;
+        const {
+            loadDetails, loadDetailSimilar,
+            reloadBookComments, login,
+            checkIsAddBookshelf, navigation
+        } = this.props;
 
         if(changeId){
             navigation.setParams({hexId: bookHexId, bookId: bookId});
@@ -439,7 +449,7 @@ class Details extends BaseComponent<Props> {
                                 <Text
                                     style={[Fonts.fontFamily, Fonts.fontSize12, Colors.gray_4c4c4c]}
                                 >
-                                    共{ data ? data.latestChapter.sourceSiteIndex : 0 }章
+                                    共{ data && data.latestChapter ? data.latestChapter.sourceSiteIndex : 0 }章
                                 </Text>
                             </View>
                         </View>
@@ -453,9 +463,19 @@ class Details extends BaseComponent<Props> {
         const hexId = item.hexId;
         const bookId = item.id;
         const title = item.title;
-        const { navigation } = this.props;
+        const { navigation, chapter, lightChapterTitle } = this.props;
+        let content = [], index = 0;
 
-        navigation && navigation.navigate('ChapterDirectory',{ hexId, bookId, title, type: 'chapter' });
+        if(chapter && Object.keys(chapter).length !== 0){
+            content = chapter.content;
+            index = chapter.index;
+        }
+
+        lightChapterTitle && lightChapterTitle(hexId, content, index);
+        navigation && navigation.navigate('ChapterDirectory',{
+            hexId, bookId,
+            title, type: 'chapter'
+        });
     }
     // 更新 - function
     updateCatalog(item) {
@@ -518,7 +538,10 @@ class Details extends BaseComponent<Props> {
                         <View style={{flexDirection: 'row'}}>
                             <View style={[styles.newMesRow]}>
                                 <Text
-                                    style={[Fonts.fontFamily, Fonts.fontSize12, Colors.orange_f3916b]}>{data ? data.latestChapter.title : '暂无最新章节'}</Text>
+                                    style={[Fonts.fontFamily, Fonts.fontSize12, Colors.orange_f3916b]}
+                                >
+                                    { data && data.latestChapter ? data.latestChapter.title : '暂无最新章节' }
+                                </Text>
                             </View>
                         </View>
                     </View>
@@ -613,29 +636,43 @@ class Details extends BaseComponent<Props> {
     }
     // 分享朋友 - function
     _shareFriends(){
-        const title=this.state.bookTitle ? this.state.bookTitle : '小说天堂'
-        const shareUrl = global.launchSettings && global.launchSettings.agentData && global.launchSettings.agentData.data &&
-            global.launchSettings.agentData.data.shareUrl || 'http://share.lameixisi.cn/share/index.html';
+        const shareUrl = global.launchSettings &&
+                         global.launchSettings.agentData &&
+                         global.launchSettings.agentData.data &&
+                         global.launchSettings.agentData.data.shareUrl || 'http://share.lameixisi.cn';
         const agentTag = (global.launchSettings && global.launchSettings.agentTag) || '10';
         const channelID = global.launchSettings && global.launchSettings.channelID;
-        const link = `http://weixin.myfoodexpress.cn/book-page?id=book_id${this.state.hexId}`;
 
-        shareRemoveListener && shareRemoveListener();
-        commonShare && commonShare('friends', channelID, shareUrl, agentTag,title, this.state.bookDescribe,link);
-        shareAddListener && shareAddListener();
+        //shareRemoveListener && shareRemoveListener();
+        commonShare && commonShare('friends', channelID, shareUrl, agentTag);
+        this.props.localShare && this.props.localShare();
+        // shareAddListener && shareAddListener(_ => {
+        //     this.props.localShare && this.props.localShare();
+        //     if(this.props.share.code === 0){
+        //         Toast.show(this.props.share.message,{duration: 2000, position: -55});
+        //     }
+        //
+        //     // console.log('分享成功');
+        // });
     }
     // 分享朋友圈 - function
     _shareFriendsCircle(){
-        const title=this.state.bookTitle ? this.state.bookTitle : '小说天堂'
         const shareUrl = global.launchSettings && global.launchSettings.agentData && global.launchSettings.agentData.data &&
-            global.launchSettings.agentData.data.shareUrl || 'http://share.lameixisi.cn/share/index.html';
+            global.launchSettings.agentData.data.shareUrl || 'http://share.lameixisi.cn';
         const agentTag = (global.launchSettings && global.launchSettings.agentTag) || '10';
         const channelID = global.launchSettings && global.launchSettings.channelID;
-        const link = `http://weixin.myfoodexpress.cn/book-page?id=book_id${this.state.hexId}`;
 
-        shareRemoveListener && shareRemoveListener();
-        commonShare && commonShare('friendsCircle', channelID, shareUrl, agentTag,title,this.state.bookDescribe,link);
-        shareAddListener && shareAddListener();
+        // shareRemoveListener && shareRemoveListener();
+
+        commonShare && commonShare('friendsCircle', channelID, shareUrl, agentTag);
+        this.props.localShare && this.props.localShare();
+
+        // shareAddListener && shareAddListener(_ => {
+        //     this.props.localShare && this.props.localShare();
+        //     if(this.props.share.code === 0){
+        //         Toast.show(this.props.share.message,{duration: 2000, position: -55})
+        //     }
+        // });
     }
     render() {
         return (
@@ -831,23 +868,30 @@ const styles = ScaledSheet.create({
 
 const mapStateToProps = (state, ownProps) => {
     const bookHex = ownProps.navigation.state.params.hexId;
+
     let data = state.getIn(['details', bookHex]);
     let userData = state.getIn(['user','userData','baseInfo']);
+    let localData = state.getIn(['local','chapterTitle', bookHex]);
+    let share = state.getIn(['user','userData','share']);
 
     if (Immutable.Map.isMap(data)) { data = data.toJS() }
     if (Immutable.Map.isMap(userData)) { userData = userData.toJS() }
-    return { ...ownProps, ...data, ...userData }
+    if (Immutable.Map.isMap(localData)) { localData = localData.toJS() }
+    if(Immutable.Map.isMap(share)){ share = share.toJS() }
+
+    return {
+        ...ownProps, ...data,
+        ...userData, ...localData,
+        share: {...share}
+    }
 };
 
 export default connect(mapStateToProps, {
-    addBookshelf,
-    loadDetails,
-    loadDetailSimilar,
-    reloadBookComments,
-    likeComments,
-    checkIsAddBookshelf,
-    updateBookshelf,
-    cancelAddBookshelf
+    addBookshelf, loadDetails,
+    loadDetailSimilar, reloadBookComments,
+    likeComments, checkIsAddBookshelf,
+    updateBookshelf, cancelAddBookshelf,
+    lightChapterTitle, localShare
 })(Details);
 
 

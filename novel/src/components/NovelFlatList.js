@@ -3,17 +3,15 @@
 
 import React, { Component } from 'react';
 import {
-    View,
-    Text,
-    FlatList,
-    TouchableOpacity,
-    RefreshControl,
-    Animated,
+    View, Text,
+    FlatList, TouchableOpacity,
+    RefreshControl, Animated,
 } from 'react-native';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 import { Styles, ScaledSheet, BackgroundColor, Fonts, Colors } from "../common/Style";
 import { RefreshState } from '../common/Tool';
-import Chrysanthemum from '../components/Chrysanthemum';
+import { SwipeListView  } from 'react-native-swipe-list-view';
+// import Chrysanthemum from '../components/Chrysanthemum';
 
 const footerRefreshingText = '数据加载中…';
 const footerFailureText = '点击重新加载';
@@ -26,6 +24,7 @@ type Props = {
     footerContainerStyle?: Object,
     footerTextStyle?: Object,
     showArrow?: boolean,
+    swipeFlatList?: boolean
 };
 
 class NovelFlatList extends Component<Props>{
@@ -33,6 +32,7 @@ class NovelFlatList extends Component<Props>{
         refreshState: RefreshState.Idle,
         onEndReachedThreshold: 0.7,
         showArrow: false,
+        swipeFlatList: false
     };
     constructor(props){
         super(props);
@@ -60,7 +60,8 @@ class NovelFlatList extends Component<Props>{
 
         switch (this.props.refreshState) {
             case RefreshState.Idle:
-                footer = (<View/>);
+                // footer = (<View/>);
+                footer = null;
                 break;
             case RefreshState.Failure: {
                 footer = (
@@ -78,7 +79,7 @@ class NovelFlatList extends Component<Props>{
             case RefreshState.FooterRefreshing: {
                 footer = (
                     <View style={footerContainerStyle}>
-                        <Chrysanthemum/>
+                        {/*<Chrysanthemum/>*/}
                         <Text style={[footerTextStyle, {marginLeft: moderateScale(7)}]}>{ footerRefreshingText }</Text>
                     </View>
                 );
@@ -169,28 +170,54 @@ class NovelFlatList extends Component<Props>{
         this.flatListRef && this.flatListRef.scrollToOffset(0, true);
     }
     render(){
+        const { swipeFlatList } = this.props;
+
         return (
             <View style={[styles.container]}>
-                <FlatList
-                    ref={ref => this.flatListRef = ref}
-                    showsVerticalScrollIndicator={false}
-                    showsHorizontalScrollIndicator={false}
-                    legacyImplementation={false}
-                    onEndReached={this.onEndReached.bind(this)}
-                    onEndReachedThreshold={this.props.onEndReachedThreshold}
-                    ListFooterComponent={this.renderFooter.bind(this)}
-                    onMomentumScrollEnd={this.onMomentumScrollEnd.bind(this)}
-                    onScrollEndDrag={this.onScrollEndDrag.bind(this)}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={parseInt(this.props.refreshState) === parseInt(RefreshState.HeaderRefreshing)}
-                            onRefresh={this.onHeaderRefresh.bind(this)}
-                            tintColor={BackgroundColor.bg_f3916b}
-                            colors={[BackgroundColor.bg_f3916b]}
+                {
+                    swipeFlatList ?
+                        <SwipeListView
+                            useFlatList={true}
+                            listViewRef={ref => this.flatListRef = ref}
+                            showsVerticalScrollIndicator={false}
+                            showsHorizontalScrollIndicator={false}
+                            legacyImplementation={false}
+                            onEndReached={this.onEndReached.bind(this)}
+                            onEndReachedThreshold={this.props.onEndReachedThreshold}
+                            ListFooterComponent={this.renderFooter.bind(this)}
+                            onMomentumScrollEnd={this.onMomentumScrollEnd.bind(this)}
+                            onScrollEndDrag={this.onScrollEndDrag.bind(this)}
+                            refreshControl={
+                                <RefreshControl
+                                    refreshing={parseInt(this.props.refreshState) === parseInt(RefreshState.HeaderRefreshing)}
+                                    onRefresh={this.onHeaderRefresh.bind(this)}
+                                    tintColor={BackgroundColor.bg_f3916b}
+                                    colors={[BackgroundColor.bg_f3916b]}
+                                />
+                            }
+                            { ...this.props }
+                        />:
+                        <FlatList
+                            ref={ref => this.flatListRef = ref}
+                            showsVerticalScrollIndicator={false}
+                            showsHorizontalScrollIndicator={false}
+                            legacyImplementation={false}
+                            onEndReached={this.onEndReached.bind(this)}
+                            onEndReachedThreshold={this.props.onEndReachedThreshold}
+                            ListFooterComponent={this.renderFooter.bind(this)}
+                            onMomentumScrollEnd={this.onMomentumScrollEnd.bind(this)}
+                            onScrollEndDrag={this.onScrollEndDrag.bind(this)}
+                            refreshControl={
+                                <RefreshControl
+                                    refreshing={parseInt(this.props.refreshState) === parseInt(RefreshState.HeaderRefreshing)}
+                                    onRefresh={this.onHeaderRefresh.bind(this)}
+                                    tintColor={BackgroundColor.bg_f3916b}
+                                    colors={[BackgroundColor.bg_f3916b]}
+                                />
+                            }
+                            { ...this.props }
                         />
-                    }
-                    { ...this.props }
-                />
+                }
                 {
                     (this.props.showArrow && this.state.showArrow) ?
                         <AnimatedTouchableOpacity

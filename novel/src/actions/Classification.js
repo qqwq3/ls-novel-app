@@ -106,4 +106,17 @@ export const cleanSearch = () => (dispatch: Dispatch, getState: GetState) => {
     return dispatch(_cleanSearch());
 };
 
+const _hotSearch = (promotionId) => ({
+    params: {
+        stateKeys: ['hot']
+    },
+    [CALL_API]: {
+        type: 'LOAD_HOT_SEARCH_CATEGORY_LIST',
+        endpoint: `book/hot_query?promotion_id=${promotionId}`
+    }
+});
 
+// 热门搜索
+export const hotSearch = (promotionId: string | number = 70) => (dispatch: Dispatch, getState: GetState) => {
+    return dispatch(_hotSearch(promotionId));
+};

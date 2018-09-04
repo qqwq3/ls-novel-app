@@ -1,13 +1,10 @@
 package com.novel;
 
 import android.os.Bundle;
-
 import com.facebook.react.ReactActivity;
 import com.reactnativecomponent.splashscreen.RCTSplashScreen;
-
 import com.umeng.analytics.MobclickAgent;
 import com.umeng.analytics.MobclickAgent.EScenarioType;
-
 
 
 public class MainActivity extends ReactActivity {
@@ -36,12 +33,16 @@ public class MainActivity extends ReactActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        RCTSplashScreen.openSplashScreen(this);   //open splashscreen
-        //RCTSplashScreen.openSplashScreen(this, true, ImageView.ScaleType.FIT_XY);   //open splashscreen fullscreen
+        // open splashscreen
+        RCTSplashScreen.openSplashScreen(this);
+
+        // open splashscreen fullscreen
+        // RCTSplashScreen.openSplashScreen(this, true, ImageView.ScaleType.FIT_XY);
 
         super.onCreate(savedInstanceState);
 
         MobclickAgent.setSessionContinueMillis(3000);
         MobclickAgent.setScenarioType(this, EScenarioType.E_DUM_NORMAL);
+
     }
 }

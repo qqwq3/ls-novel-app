@@ -20,14 +20,14 @@ const classification = (state = initialState, action: Action) => {
         }
 
         switch (action.type) {
-            // 分类首页 - 成功
+            // 分类首页
             case 'LOAD_CATEGORY_MENU_SUCCESS':
                 return state.setIn(action.params.stateKeys, {
                     timeUpdated:Date.now(),
                     ...action.response.data,
                 });
 
-            // 分类二级 - 刷新 - 成功
+            // 分类二级 - 刷新
             case 'RELOAD_CATEGORY_LIST_SUCCESS':
                 return state.setIn(action.params.stateKeys,{
                     updateTime: Date.now(),
@@ -36,7 +36,7 @@ const classification = (state = initialState, action: Action) => {
                     ...action.response.data,
                 });
 
-            //  分类二级 - 加载 - 成功
+            //  分类二级 - 加载
             case 'LOAD_CATEGORY_LIST_SUCCESS':
                 return state.updateIn(action.params.stateKeys, m => {
                     if (typeof m === 'undefined' || !m.has('records')) {
@@ -59,7 +59,7 @@ const classification = (state = initialState, action: Action) => {
                     };
                 });
 
-            // 搜索 - 刷新 - 成功
+            // 搜索 - 刷新
             case 'RELOAD_CATEGORY_SEARCH_LIST_SUCCESS':
                 return state.setIn(action.params.stateKeys,{
                     updateTime: Date.now(),
@@ -68,7 +68,7 @@ const classification = (state = initialState, action: Action) => {
                     ...action.response.data,
                 });
 
-            //  搜索 - 加载 - 成功
+            //  搜索 - 加载
             case 'LOAD_CATEGORY_SEARCH_LIST_SUCCESS':
                 return state.updateIn(action.params.stateKeys, m => {
                     if (typeof m === 'undefined' || !m.has('records')) {
@@ -91,11 +91,18 @@ const classification = (state = initialState, action: Action) => {
                     };
                 });
 
-            // 清空搜索 - 成功
+            // 清空搜索
             case 'CLEAN_CATEGORY_SEARCH_LIST':
                 return state.setIn(action.params.stateKeys,{
                     records: [],
                     updateTime: Date.now(),
+                });
+
+            // 热门搜索
+            case 'LOAD_HOT_SEARCH_CATEGORY_LIST_SUCCESS':
+                return state.setIn(action.params.stateKeys,{
+                    hotSearchUpdateTime: Date.now(),
+                    ...action.response.data
                 });
         }
 
