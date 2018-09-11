@@ -210,8 +210,10 @@ class App extends Component<Props> {
         this.setState({isLoading: false});
     }
     renderLunchImage(){
+        const uri = 'http://novel-res.oss-cn-hangzhou.aliyuncs.com/lunch/launch.jpg';
+
         return (
-            <Image source={mix.lunchImage} style={[styles.lunchImage, Img.resizeModeStretch]}/>
+            <Image source={{uri:uri}} style={[styles.lunchImage, Img.resizeModeStretch]}/>
         );
     }
     render() {
@@ -340,6 +342,6 @@ const styles = ScaledSheet.create({
     },
     progressBar: {
         position: 'absolute',
-        bottom: verticalScale(30),
+        bottom: verticalScale(50),
     },
 });

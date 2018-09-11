@@ -4,7 +4,7 @@
 import {CALL_API, PAGE_CATALOG, PAGE_CONTROL,DOUBLE_PAGE_CATALOG} from "../common/Keys";
 import {Dispatch, GetState, ThunkAction} from "../container/Types";
 
-const _reloadChapterDirectory = (type, bookHex, refreshState, currentOffset): ThunkAction => ({
+const _reloadChapterDirectory = (type, bookHex, currentOffset): ThunkAction => ({
     params: {
         stateKeys: [type, bookHex, 'directory'],
         currentOffset: currentOffset + DOUBLE_PAGE_CATALOG,
@@ -19,14 +19,13 @@ const _reloadChapterDirectory = (type, bookHex, refreshState, currentOffset): Th
 export const reloadChapterDirectory = (
     type: string,
     bookHex: string | number,
-    refreshState: number | string,
     currentOffset: number = 0,
 ) => (dispatch: Dispatch, getState: GetState) => {
-    return dispatch(_reloadChapterDirectory(type, bookHex, refreshState, currentOffset));
+    return dispatch(_reloadChapterDirectory(type, bookHex, currentOffset));
 };
 
 
-const _loadChapterDirectory = (type, bookHex, refreshState, currentOffset): ThunkAction => ({
+const _loadChapterDirectory = (type, bookHex, currentOffset): ThunkAction => ({
     params: {
         stateKeys: [type, bookHex, 'directory'],
         currentOffset: currentOffset + DOUBLE_PAGE_CATALOG,
@@ -41,10 +40,9 @@ const _loadChapterDirectory = (type, bookHex, refreshState, currentOffset): Thun
 export const loadChapterDirectory = (
     type: string,
     bookHex: string | number,
-    refreshState: number | string,
     currentOffset: number = 0,
 ) => (dispatch: Dispatch, getState: GetState) => {
-    return dispatch(_loadChapterDirectory(type, bookHex, refreshState, currentOffset));
+    return dispatch(_loadChapterDirectory(type, bookHex, currentOffset));
 };
 
 

@@ -26,9 +26,9 @@ class ShareBookCurrency extends BaseComponent<Props>{
     }
     componentWillReceiveProps(nextProps) {
         console.log('share', nextProps);
-        if(nextProps.code === 0){
-            Toast.show(nextProps.message,{duration: 2000, position: -55})
-        }
+        // if(nextProps.code === 0){
+        //     Toast.show(nextProps.message,{duration: 2000, position: -55})
+        // }
     }
     componentWillUnmount() {
         setStatusBar && setStatusBar(BackgroundColor.bg_fff, false,'dark-content');

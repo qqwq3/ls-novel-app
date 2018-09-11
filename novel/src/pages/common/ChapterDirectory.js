@@ -2,15 +2,29 @@
 'use strict';
 
 import React,{ Component } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
+import {
+    View, Text, TouchableOpacity,
+    ScrollView, Image, StatusBar
+} from 'react-native';
 import Immutable from 'immutable';
 import { connect } from 'react-redux';
-import Toast from 'react-native-root-toast';
+import _ from 'loadsh';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 import ScrollableTabView from 'react-native-scrollable-tab-view';
-import {Styles, ScaledSheet, Fonts, Colors, BackgroundColor, Img} from "../../common/Style";
-import {pixel, width, RefreshState, statusBarSet, infoToast} from "../../common/Tool";
-import { reloadChapterDirectory, loadChapterDirectory, reloadBookMark, loadBookMark } from '../../actions/CatalogDirectory';
+import SlidingUpPanel from 'rn-sliding-up-panel';
+import {
+    Styles, ScaledSheet, Fonts,
+    Colors, BackgroundColor, Img
+} from "../../common/Style";
+import {
+    pixel, width,
+    RefreshState, statusBarSet,
+    infoToast, height
+} from "../../common/Tool";
+import {
+    reloadChapterDirectory, loadChapterDirectory,
+    reloadBookMark, loadBookMark
+} from '../../actions/CatalogDirectory';
 import chapterDirectory from "../../reducers/ChapterDirectory";
 import NovelFlatList from '../../components/NovelFlatList';
 import Header from '../../components/Header';
@@ -18,6 +32,7 @@ import { readerImg } from "../../common/Icons";
 import BaseComponent from '../../components/BaseComponent';
 import { updateChapter } from '../../actions/LocalAction';
 import { fineCommonRemoveSingle } from '../../common/Storage';
+import ChapterPartition from '../../common/ChapterPartition';
 
 type Props = {
     chapter?: Object
@@ -35,9 +50,19 @@ class ChapterDirectory extends BaseComponent<Props, State>{
             currentIndex: 0,
             currentChapterHexId: null,
             title: null,
+            page: 1,
+            visible: false,
+            active: false,
+            startIndex: 0,
+            endIndex: 0,
+            startIndexArr: [],
+            endIndexArr: [],
+            totalPage: 0,
+            records: [],
         };
         this.errorTime = Date.now();
         this.chapterTime = Date.now();
+        this.directoryTime = Date.now();
     }
     componentDidMount() {
         const { navigation, chapter } = this.props;
@@ -67,7 +92,20 @@ class ChapterDirectory extends BaseComponent<Props, State>{
     componentWillReceiveProps(nextProps) {
         super.componentWillReceiveProps(nextProps);
 
-        // console.log('chapterDirectory.js',nextProps);
+        console.log('chapterDirectory.js',nextProps);
+
+        if(nextProps.directory && nextProps.directory.updateTime > this.directoryTime){
+            const totalRecords = nextProps.directory.totalRecords;
+            const chapterNoTraverse = ChapterPartition.noTraverse(Number(totalRecords), this.state.page, 100);
+            const records = nextProps.directory.chapters;
+
+            this.directoryTime = nextProps.directory.updateTime;
+            this.setState({
+                startIndex: chapterNoTraverse.startIndex,
+                endIndex: chapterNoTraverse.endIndex,
+                records: records,
+            });
+        }
 
         // if(nextProps.chapter && nextProps.chapter.timeUpdated > this.chapterTime){
         //     this.chapterTime = nextProps.chapter.timeUpdated;
@@ -153,7 +191,7 @@ class ChapterDirectory extends BaseComponent<Props, State>{
         const hexId =  navigation.getParam('hexId');
         const type = navigation.getParam('type');
 
-        reloadChapterDirectory && reloadChapterDirectory(type, hexId, refreshState, 0);
+        reloadChapterDirectory && reloadChapterDirectory(type, hexId, 0);
     }
     // 底部加载 - 章节 - function
     onFooterRefreshChapter(refreshState){
@@ -162,7 +200,7 @@ class ChapterDirectory extends BaseComponent<Props, State>{
         const type = navigation.getParam('type');
         const currentOffset = directory ? directory.currentOffset : 0;
 
-        loadChapterDirectory && loadChapterDirectory(type, hexId, refreshState, currentOffset);
+        loadChapterDirectory && loadChapterDirectory(type, hexId, currentOffset);
     }
     // 头部刷新 - 书签 - function
     onHeaderRefreshBookmark(refreshState){
@@ -187,13 +225,13 @@ class ChapterDirectory extends BaseComponent<Props, State>{
         const currentOffset = directory ? directory.currentOffset : 0;
         const refreshState = directory ? directory.refreshState : 0;
         const totalRecords = directory ? directory.totalRecords : 0;
-        const records = directory ? directory.chapters : [];
+        // const records = directory ? directory.chapters : [];
 
         return (
             <View style={[styles.rcBody]} tabLabel={'目录'}>
                 <NovelFlatList
                     showArrow={true}
-                    data={records}
+                    data={this.state.records}
                     renderItem={this.renderItemChapter.bind(this)}
                     keyExtractor={(item, index) => index + ''}
                     onHeaderRefresh={this.onHeaderRefreshChapter.bind(this)}
@@ -319,6 +357,123 @@ class ChapterDirectory extends BaseComponent<Props, State>{
             bookId
         });
     }
+    renderChapterSection(){
+        return (
+            <TouchableOpacity
+                activeOpacity={0.5}
+                style={[styles.currentChapterBox, Styles.row, Styles.flexCenter]}
+                onPress={this._openPanel.bind(this)}
+            >
+                <Text style={[Fonts.fontFamily, Fonts.fontSize16, Colors.orange_f3916b]}>
+                    { this.state.startIndex }
+                    { '\u3000' }
+                    { '\u223C' }
+                    { '\u3000' }
+                    { this.state.endIndex} 章
+                </Text>
+            </TouchableOpacity>
+        );
+    }
+    // 打开章节选择面板 - function
+    _openPanel(){
+        const totalRecords = this.props.directory ? this.props.directory.totalRecords : 0;
+        const chapterTraverse = ChapterPartition.traverse(Number(totalRecords), 100);
+
+        this.setState({
+            visible: true,
+            startIndexArr: chapterTraverse.startIndex,
+            endIndexArr: chapterTraverse.endIndex,
+            totalPage: chapterTraverse.totalPage
+        });
+    }
+    // 关闭章节选择面板 - function
+    _closePanel(){
+        this.setState({
+            visible: false,
+        });
+    }
+    // 在面板里面选择章节区域 - function
+    _selectChapterSection(item, index){
+        const { reloadChapterDirectory, navigation } = this.props;
+        const hexId =  navigation.getParam('hexId');
+        const type = navigation.getParam('type');
+        const currentOffset = this.state.startIndexArr[index] - 1;
+
+        if(this.state.page === ( index + 1 )){
+            return this._closePanel();
+        }
+
+        reloadChapterDirectory && reloadChapterDirectory(type, hexId, currentOffset);
+
+        this.setState({
+            page: item + 1,
+            visible: false,
+            startIndex: this.state.startIndexArr[index],
+            endIndex: this.state.endIndexArr[index],
+        });
+
+        return;
+    }
+    renderSlideDownToUpPanel(){
+        const countArr = _.range(this.state.totalPage);
+
+        return (
+            <SlidingUpPanel
+                showBackdrop={false}
+                allowMomentum={false}
+                allowDragging={false}
+                height={height}
+                visible={this.state.visible}
+                onRequestClose={() => this.setState({visible: false})}
+            >
+                <View style={[styles.panelContent, {backgroundColor: BackgroundColor.bg_fff}]}>
+                    <ScrollView
+                        showsHorizontalScrollIndicator={false}
+                        showsVerticalScrollIndicator={false}
+                        alwaysBounceVertical={true}
+                    >
+                        {
+                            countArr.map((item, index) => {
+                                let dotItem = this.state.page === (index+1) ? <View style={styles.selectDot} /> : null;
+                                let borderColor = this.state.page === (index+1) ? '#F8AD54' : '#cccccc';
+
+                                return (
+                                    <TouchableOpacity
+                                        // onPress={() => this.props.page === (index+1) ? this.props.closeChapterSelect() : this._select(item+1)}
+                                        key={index}
+                                        style={[styles.popRow, Styles.paddingHorizontal15]}
+                                        onPress={this._selectChapterSection.bind(this, item, index)}
+                                    >
+                                        <View>
+                                            <Text style={[Fonts.fontFamily, Fonts.fontSize15, Colors.gray_808080]}>
+                                                { this.state.startIndexArr[index] }
+                                                { '\u3000' }
+                                                { '\u223C' }
+                                                { '\u3000' }
+                                                { this.state.endIndexArr[index] } 章
+                                            </Text>
+                                        </View>
+                                        <View>
+                                            <View style={[styles.singleSelect, Styles.flexCenter,{borderColor: borderColor}]}>
+                                                { dotItem }
+                                            </View>
+                                        </View>
+                                    </TouchableOpacity>
+                                )
+                            })
+                        }
+                    </ScrollView>
+                    <TouchableOpacity
+                        style={[styles.panelFooter, Styles.flexCenter, Styles.marginHorizontal15]}
+                        activeOpacity={0.50}
+                        onPress={this._closePanel.bind(this)}
+                    >
+                        <Text style={[Fonts.fontFamily, Fonts.fontSize15, Colors.orange_f3916b]}>关闭</Text>
+                    </TouchableOpacity>
+                </View>
+            </SlidingUpPanel>
+        );
+    }
     render(){
         const { navigation } = this.props;
         const type = navigation.getParam('type');
@@ -327,21 +482,24 @@ class ChapterDirectory extends BaseComponent<Props, State>{
             <View style={[Styles.container]}>
                 { this.renderHeader() }
                 {/*{ this.renderCurrentChapter() }*/}
-                {
-                    type === 'chapter' ? this.renderCatalog() :
-                    <ScrollableTabView
-                        renderTabBar={() => <ReaderCatalogueMenu/>}
-                        tabBarInactiveTextColor={'#4c4c4c'}
-                        tabBarActiveTextColor={'#f3916b'}
-                        tabBarBackgroundColor={'#ffffff'}
-                        locked={false}
-                        scrollWithoutAnimation={false}
-                        prerenderingSiblingsNumber={2}
-                    >
-                        { this.renderCatalog() }
-                        { this.renderBookMark() }
-                    </ScrollableTabView>
-                }
+                { this.renderChapterSection() }
+                {/*{*/}
+                    {/*type === 'chapter' ? this.renderCatalog() :*/}
+                    {/*<ScrollableTabView*/}
+                        {/*renderTabBar={() => <ReaderCatalogueMenu/>}*/}
+                        {/*tabBarInactiveTextColor={'#4c4c4c'}*/}
+                        {/*tabBarActiveTextColor={'#f3916b'}*/}
+                        {/*tabBarBackgroundColor={'#ffffff'}*/}
+                        {/*locked={false}*/}
+                        {/*scrollWithoutAnimation={false}*/}
+                        {/*prerenderingSiblingsNumber={2}*/}
+                    {/*>*/}
+                        {/*{ this.renderCatalog() }*/}
+                        {/*{ this.renderBookMark() }*/}
+                    {/*</ScrollableTabView>*/}
+                {/*}*/}
+                { this.renderCatalog() }
+                { this.renderSlideDownToUpPanel() }
             </View>
         );
     }
@@ -379,6 +537,47 @@ class ReaderCatalogueMenu extends Component{
 }
 
 const styles = ScaledSheet.create({
+    selectDot:{
+        width: 12,
+        height: 12,
+        backgroundColor: '#F8AD54',
+        borderRadius: 12,
+        overflow: 'hidden',
+    },
+    singleSelect: {
+        borderWidth: 0.6,
+        borderStyle:'solid',
+        borderColor: '#cccccc',
+        width: 20,
+        height: 20,
+        borderRadius: 20,
+        overflow: 'hidden',
+    },
+    popRow:{
+        flexDirection:'row',
+        justifyContent:'space-between',
+        height: '44@vs',
+        alignItems: 'center'
+    },
+    panelFooter: {
+        height: '60@vs',
+        paddingHorizontal: '15@ms',
+        flexDirection: 'row',
+        borderTopColor: '#e5e5e5',
+        borderTopWidth: 1 / pixel,
+    },
+    slidingUpPanel: {
+        width: width,
+        height: height,
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        zIndex: 1000
+    },
+    panelContent: {
+        flex: 1,
+        paddingTop: verticalScale(44 + StatusBar.currentHeight + 14.5),
+    },
     currentChapterBox:{
         height: '60@vs',
         borderBottomColor: BackgroundColor.bg_e5e5e5,
@@ -458,6 +657,7 @@ const styles = ScaledSheet.create({
 const mapStateToProps = (state, ownProps) => {
     const type = ownProps.navigation.getParam('type');
     const hexId = ownProps.navigation.getParam('hexId');
+
     let data = state.getIn(['chapterDirectory', type, hexId]);
     let localData = state.getIn(['local','chapterTitle', hexId]);
     let userData = state.getIn(['user','userData','baseInfo']);

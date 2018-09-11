@@ -83,10 +83,10 @@ public class MainApplication extends Application implements ReactApplication {
     super.onCreate();
     SoLoader.init(this, /* native exopackage */ false);
 
-    // String channel = WalleChannelReader.getChannel(this.getApplicationContext());
-    // channel = null == channel ? "10" : channel;
+     String channel = WalleChannelReader.getChannel(this.getApplicationContext());
+     channel = null == channel ? "10" : channel;
 
-    // RN UMeng初始化
-    // RNUMConfigure.init(this, "5a600a268f4a9d15470008d9", channel, UMConfigure.DEVICE_TYPE_PHONE, "");
+     //RN UMeng初始化
+     RNUMConfigure.init(this, "5a600a268f4a9d15470008d9", channel, UMConfigure.DEVICE_TYPE_PHONE, "");
   }
 }

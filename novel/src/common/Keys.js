@@ -1,7 +1,6 @@
 
 'use strict';
-import { Platform } from 'react-native';
-import CodePush from 'react-native-code-push';
+
 import AppMetadata from 'react-native-app-metadata';
 
 // 配置中渠道key
